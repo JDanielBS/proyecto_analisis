@@ -23,7 +23,6 @@ class MatrizTPM:
 if __name__ == "__main__":
     json_data = '''
     {
-      "variables": ["a", "b", "c", "d", "e", "f"],
       "condiciones_background": ["e", "f"],
       "subsistema": {
         "t": ["a", "b", "c"],

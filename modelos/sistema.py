@@ -4,51 +4,41 @@ import json
 class Sistema:
 
     def __init__(self):
-        self.__variables
         self.__estado_inicial
         self.__background
-        self.__subsistema
-        self.__estado_subsistema
+        self.__subsistema_futuro
+        self.__subsistema_presente
 
     def set_with_csv(self, ruta):
         with open(ruta, mode='r') as archivo:
             lector = csv.reader(archivo)
             fila = next(lector)
-            if len(fila) >= 6:
-                self.__variables = fila[0].strip()
+            if len(fila) >= 4:
                 self.__estado_inicial = fila[1].strip()
                 self.__background = fila[2].strip()
-                self.__subsistema = fila[3].strip()
-                self.__estado_subsistema = fila[4].strip()
+                self.__subsistema_futuro = fila[3].strip()
+                self.__subsistema_presente = fila[4].strip()
             else:
                 raise ValueError("El archivo CSV no tiene suficientes columnas")
             
     def set_with_json(self, ruta):
         with open(ruta, mode='r') as archivo:
             contenido = json.load(archivo)
-            self.__variables = contenido["variables"]
             self.__estado_inicial = contenido["estado_inicial"]
             self.__background = contenido["background"]
             self.__subsistema = contenido["subsistema"]
-            self.__estado_subsistema = contenido["estado_subsistema"]
 
-    def get_variables(self):
-        return self.__variables
-    
     def get_estado_inicial(self):
         return self.__estado_inicial
     
     def get_sistema_candidato(self):
         return self.__background
     
-    def get_subsistema(self):
-        return self.__subsistema
+    def get_subsistema_presente(self):
+        return self.__subsistema_presente
     
-    def get_estado_subsistema(self):
-        return self.__estado_subsistema
-    
-    def set_variables(self, variables):
-        self.__variables = variables
+    def get_subsistema_futuro(self):
+        return self.__subsistema_futuro
 
     def set_estado_inicial(self, estado_inicial):
         self.__estado_inicial = estado_inicial
@@ -56,13 +46,13 @@ class Sistema:
     def set_sistema_candidato(self, background):
         self.__background = background
     
-    def set_subsistema(self, subsistema):
-        self.__subsistema = subsistema
+    def set_subsistema_presente(self, subsistema_presente):
+        self.__subsistema_presente = subsistema_presente
 
-    def set_estado_subsistema(self, estado_subsistema):
-        self.__estado_subsistema = estado_subsistema
+    def set_subsistema_futuro(self, subsistema_futuro):
+        self.__subsistema_futuro = subsistema_futuro
 
     def __repr__(self):
-        return (f"Sistema(variables={self.__variables}, estado_inicial={self.__estado_inicial}, "
-                f"background={self.__background}, subsistema={self.__subsistema}, "
-                f"estado_subsistema={self.__estado_subsistema})")
+        return (f"Estado_inicial={self.__estado_inicial}, "
+                f"background={self.__background}, subsistema_presente={self.__subsistema_presente}, "
+                f"subsistema_futuro={self.__subsistema_futuro})")
