@@ -43,16 +43,13 @@ class MatrizTPM:
     :param bit_posicion: Posición del bit que quieres verificar (empezando en 0)
     :param valor_bit: Valor del bit que estás buscando ('0' o '1')
     """
-    print(sistema_candidato)
-    print(estado_inicial)
     indices = self.obtener_indices_de_ceros(sistema_candidato)
-    indices_a_mantener = []
 
     for i in indices:
       bit_indicado = estado_inicial[i]
-      indices_a_mantener.append([j for j in self.__matriz.index if j[i] != bit_indicado])
+      indices_a_mantener = [j for j in self.__matriz.index if j[i] == bit_indicado]
       self.__matriz = self.__matriz.loc[indices_a_mantener]
-      indices_a_mantener = []
+      indices_a_mantener.clear()
 
   def obtener_indices_de_ceros(self, sistema_candidato):
     """
