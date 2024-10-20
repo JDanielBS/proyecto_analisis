@@ -24,9 +24,6 @@ class MatrizTPM:
     if len(labels) >= filas:
       self.__matriz.index = labels[:filas]
     
-    print("Matriz con etiquetas de columnas y filas indexadas:")
-    print(self.__matriz)
-
   def lil_endian_int(self, n: int, num_etiquetas: int):
     '''
      Genera representaciones en formato little-endian de números binarios.
@@ -54,7 +51,9 @@ class MatrizTPM:
     self.__matriz.index = nuevos_indices
     
   def eliminar_columnas_por_bits(self, sistema_candidato, estado_inicial):
-    
+    '''
+    Elimina las columnas cuyos índices tengan un bit específico en la posición indicada.
+    '''
     indices = self.obtener_indices_de_ceros(sistema_candidato)
     
     nuevos_indices = [
@@ -62,13 +61,17 @@ class MatrizTPM:
         for columna in self.__matriz.columns
     ]
     self.__matriz.columns = nuevos_indices
+    
+  def combinar_columnas(self):
+    """
+    Agrupa las columnas con etiquetas iguales y suma sus valores.
+    """
+    # Transponemos la matriz para que las columnas se conviertan en filas, agrupamos, y luego volvemos a transponer
+    self.__matriz = self.__matriz.T.groupby(self.__matriz.columns, sort=False).sum().T
 
   def obtener_indices_de_ceros(self, sistema_candidato):
     """
     Obtiene los índices de todas las apariciones de '0' en representación binaria.
-    
-    :param sistema_candidato: La representación binaria como cadena.
-    :return: Una lista de índices donde se encuentran los '0's.
     """
     indices = []  
     
