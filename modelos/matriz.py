@@ -6,6 +6,14 @@ class MatrizTPM:
     self.__matriz = pd.DataFrame = pd.read_csv(route, sep=',', header=None)
     self.indexar_matriz()
 
+  def get_matriz(self):
+    return print(self.__matriz)
+  
+  '''
+  ------------------------------------------------------------------------------------------------
+  Poner en notación little endian
+  ------------------------------------------------------------------------------------------------
+  '''
   def indexar_matriz(self):
     '''
      Indexa las filas y columnas de la matriz con etiquetas en formato little-endian
@@ -31,6 +39,11 @@ class MatrizTPM:
     for state in range(num_etiquetas):
       yield bin(state)[2:].zfill(n)[::-1]
 
+  '''
+  ------------------------------------------------------------------------------------------------
+  Condiciones de background
+  ------------------------------------------------------------------------------------------------
+  '''
   def eliminar_filas_por_bits(self, sistema_candidato, estado_inicial):
     """
     Elimina las filas cuyos índices tengan un bit específico en la posición indicada.
@@ -50,7 +63,7 @@ class MatrizTPM:
     ]
     self.__matriz.index = nuevos_indices
     
-  def eliminar_columnas_por_bits(self, sistema_candidato, estado_inicial):
+  def eliminar_columnas_por_bits(self, sistema_candidato):
     '''
     Elimina las columnas cuyos índices tengan un bit específico en la posición indicada.
     '''
@@ -61,11 +74,7 @@ class MatrizTPM:
         for columna in self.__matriz.columns
     ]
     self.__matriz.columns = nuevos_indices
-    
-  def combinar_columnas(self):
-    """
-    Agrupa las columnas con etiquetas iguales y suma sus valores.
-    """
+
     # Transponemos la matriz para que las columnas se conviertan en filas, agrupamos, y luego volvemos a transponer
     self.__matriz = self.__matriz.T.groupby(self.__matriz.columns, sort=False).sum().T
 
@@ -80,5 +89,8 @@ class MatrizTPM:
         indices.append(idx) 
     return indices 
 
-  def get_matriz(self):
-    return print(self.__matriz)
+  '''
+  ------------------------------------------------------------------------------------------------
+  Marginalización por filas y columnas
+  ------------------------------------------------------------------------------------------------
+  '''
