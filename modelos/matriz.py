@@ -4,6 +4,7 @@ import math
 class MatrizTPM:
   def __init__(self, route):
     self.__matriz = pd.DataFrame = pd.read_csv(route, sep=',', header=None)
+    self.__matriz_candidata= None
     self.indexar_matriz()
 
   def get_matriz(self):
@@ -77,6 +78,7 @@ class MatrizTPM:
 
     # Transponemos la matriz para que las columnas se conviertan en filas, agrupamos, y luego volvemos a transponer
     self.__matriz = self.__matriz.T.groupby(self.__matriz.columns, sort=False).sum().T
+    self.__matriz_candidata = self.__matriz.copy()
 
   def obtener_indices_de_ceros(self, sistema_candidato):
     """
@@ -94,3 +96,39 @@ class MatrizTPM:
   Marginalización por filas y columnas
   ------------------------------------------------------------------------------------------------
   '''
+
+  def marginalizar_filas(self, subsistema_presente):
+    '''
+    Marginaliza las filas de la matriz que no pertenecen al subsistema presente.
+    '''
+    indices = self.obtener_indices_de_ceros(subsistema_presente)
+    
+    nuevos_indices = [
+        ''.join([fila[i] for i in range(len(fila)) if i not in indices])
+        for fila in self.__matriz_candidata.index
+    ]
+    self.__matriz_candidata.index = nuevos_indices
+
+    # Transponemos la matriz para que las columnas se conviertan en filas, agrupamos, y luego volvemos a transponer
+    self.__matriz_candidata = self.__matriz_candidata.groupby(self.__matriz_candidata.index, sort=False).mean()
+    print(self.__matriz_candidata)
+    
+  def marginalizar_columnas(self, subsistema_futuro):
+    '''
+    Elimina las columnas cuyos índices tengan un bit específico en la posición indicada.
+    '''
+    indices = self.obtener_indices_de_ceros(subsistema_futuro)
+
+    nuevos_indices = [
+        ''.join([columna[i] for i in range(len(columna)) if i not in indices])
+        for columna in self.__matriz_candidata.columns
+    ]
+    self.__matriz_candidata.columns = nuevos_indices
+
+    # Transponemos la matriz para que las columnas se conviertan en filas, agrupamos, y luego volvemos a transponer
+    self.__matriz_candidata = self.__matriz_candidata.T.groupby(self.__matriz_candidata.columns, sort=False).sum().T
+    print(self.__matriz_candidata)
+   
+    
+    
+    
