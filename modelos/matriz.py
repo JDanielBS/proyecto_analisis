@@ -47,6 +47,12 @@ class MatrizTPM:
       self.__matriz = self.__matriz.loc[filas_a_mantener]
       filas_a_mantener.clear()
 
+    nuevos_indices = [
+        ''.join([fila[i] for i in range(len(fila)) if i not in indices])
+        for fila in self.__matriz.index
+    ]
+    self.__matriz.index = nuevos_indices
+
   def obtener_indices_de_ceros(self, sistema_candidato):
     """
     Obtiene los índices de todas las apariciones de '0' en representación binaria.
