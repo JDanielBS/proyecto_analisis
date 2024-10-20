@@ -10,6 +10,12 @@ class Sistema:
         self.__subsistema_presente = None
         self.set_with_csv(ruta)
 
+    """
+    Lee un archivo CSV y establece los atributos del objeto con los valores de la primera fila.
+
+    Parámetros:
+    ruta (str): La ruta del archivo CSV a leer.
+    """
     def set_with_csv(self, ruta):
         with open(ruta, mode='r') as archivo:
             lector = csv.reader(archivo)
