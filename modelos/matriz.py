@@ -52,6 +52,16 @@ class MatrizTPM:
         for fila in self.__matriz.index
     ]
     self.__matriz.index = nuevos_indices
+    
+  def eliminar_columnas_por_bits(self, sistema_candidato, estado_inicial):
+    
+    indices = self.obtener_indices_de_ceros(sistema_candidato)
+    
+    nuevos_indices = [
+        ''.join([columna[i] for i in range(len(columna)) if i not in indices])
+        for columna in self.__matriz.columns
+    ]
+    self.__matriz.columns = nuevos_indices
 
   def obtener_indices_de_ceros(self, sistema_candidato):
     """
