@@ -4,7 +4,9 @@ import math
 class MatrizTPM:
   def __init__(self, route):
     self.__matriz = pd.DataFrame = pd.read_csv(route, sep=',', header=None)
-    self.__matriz_candidata= None
+    self.__matriz_candidata = None
+    self.__listado_valores_futuros = []
+    self.__listado_valores_presentes = []
     self.indexar_matriz()
 
   def get_matriz(self):
@@ -49,7 +51,7 @@ class MatrizTPM:
     """
     Elimina las filas cuyos índices tengan un bit específico en la posición indicada.
     """
-    indices = self.obtener_indices_de_ceros(sistema_candidato)
+    indices = self.obtener_indices(sistema_candidato, '0')
 
     for i in indices:
       bit_indicado = estado_inicial[i]
@@ -63,12 +65,14 @@ class MatrizTPM:
         for fila in self.__matriz.index
     ]
     self.__matriz.index = nuevos_indices
+
+    self.__listado_valores_presentes = []
     
   def eliminar_columnas_por_bits(self, sistema_candidato):
     '''
     Elimina las columnas cuyos índices tengan un bit específico en la posición indicada.
     '''
-    indices = self.obtener_indices_de_ceros(sistema_candidato)
+    indices = self.obtener_indices(sistema_candidato, '0')
     
     nuevos_indices = [
         ''.join([columna[i] for i in range(len(columna)) if i not in indices])
@@ -80,14 +84,14 @@ class MatrizTPM:
     self.__matriz = self.__matriz.T.groupby(self.__matriz.columns, sort=False).sum().T
     self.__matriz_candidata = self.__matriz.copy()
 
-  def obtener_indices_de_ceros(self, sistema_candidato):
+  def obtener_indices(self, sistema_candidato, num_indicado):
     """
     Obtiene los índices de todas las apariciones de '0' en representación binaria.
     """
     indices = []  
     
     for idx, bit in enumerate(sistema_candidato):
-      if bit == '0':
+      if bit == num_indicado:
         indices.append(idx) 
     return indices 
 
@@ -96,12 +100,11 @@ class MatrizTPM:
   Marginalización por filas y columnas
   ------------------------------------------------------------------------------------------------
   '''
-
   def marginalizar_filas(self, subsistema_presente):
     '''
     Marginaliza las filas de la matriz que no pertenecen al subsistema presente.
     '''
-    indices = self.obtener_indices_de_ceros(subsistema_presente)
+    indices = self.obtener_indices(subsistema_presente, '0')
     
     nuevos_indices = [
         ''.join([fila[i] for i in range(len(fila)) if i not in indices])
@@ -117,7 +120,7 @@ class MatrizTPM:
     '''
     Elimina las columnas cuyos índices tengan un bit específico en la posición indicada.
     '''
-    indices = self.obtener_indices_de_ceros(subsistema_futuro)
+    indices = self.obtener_indices(subsistema_futuro, '0')
 
     nuevos_indices = [
         ''.join([columna[i] for i in range(len(columna)) if i not in indices])
@@ -128,7 +131,24 @@ class MatrizTPM:
     # Transponemos la matriz para que las columnas se conviertan en filas, agrupamos, y luego volvemos a transponer
     self.__matriz_candidata = self.__matriz_candidata.T.groupby(self.__matriz_candidata.columns, sort=False).sum().T
     print(self.__matriz_candidata)
-   
+  
+  def calcular_complemento(self, subsistema_futuro, subsistema_presente):
+    '''
+    Calcula la matriz complemento tomando en cuenta el subsistema futuro y presente
+    '''
+    matriz_complemento = self.__matriz.copy()
+    indices_f = self.obtener_indices(subsistema_futuro, '1')
+    indices_p = self.obtener_indices(subsistema_presente, '1')
+
+    nuevos_indices = [
+        ''.join([columna[i] for i in range(len(columna)) if i not in indices])
+        for columna in self.__matriz_candidata.columns
+    ]
+    self.__matriz_candidata.columns = nuevos_indices
+
+    # Transponemos la matriz para que las columnas se conviertan en filas, agrupamos, y luego volvemos a transponer
+    self.__matriz_candidata = self.__matriz_candidata.T.groupby(self.__matriz_candidata.columns, sort=False).sum().T
+    return matriz_complemento
     
     
     
