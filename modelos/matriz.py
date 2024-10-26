@@ -52,7 +52,7 @@ class MatrizTPM:
     Elimina las filas y columnas de la matriz que no cumplen con las condiciones de background.
     '''
     self.eliminar_filas_por_bits(sistema_candidato, estado_inicial)
-    self.marginalizar_columnas_por_bits(sistema_candidato, self.__matriz)
+    self.marginalizar_columnas(sistema_candidato, self.__matriz)
     self.__matriz_candidata = self.__matriz.copy()
 
   def eliminar_filas_por_bits(self, sistema_candidato, estado_inicial):
@@ -76,7 +76,7 @@ class MatrizTPM:
 
     self.__listado_valores_presentes = []
     
-  def marginalizar_columnas_por_bits(self, sistema, matriz):
+  def.marginalizar_columnas(self, sistema, matriz):
     '''
     Elimina las columnas cuyos índices tengan un bit específico en la posición indicada.
     '''
@@ -90,6 +90,8 @@ class MatrizTPM:
 
     # Transponemos la matriz para que las columnas se conviertan en filas, agrupamos, y luego volvemos a transponer
     matriz = matriz.T.groupby(matriz.columns, sort=False).sum().T
+    
+    print(sistema, matriz)
 
   def obtener_indices(self, sistema_candidato, num_indicado):
     """
@@ -109,8 +111,9 @@ class MatrizTPM:
   '''
 
   def marginalizar(self, subsistema_presente, subsistema_futuro):
-    marginalizar_filas(subsistema_presente)
-    marginalizar_columnas_por_bits(subsistema_futuro, self.__matriz_candidata)
+    self.marginalizar_filas(subsistema_presente)
+    self.marginalizar_columnas(subsistema_futuro, self.__matriz_candidata)
+    print(self.__matriz_candidata)
 
   def marginalizar_filas(self, subsistema_presente):
     '''
