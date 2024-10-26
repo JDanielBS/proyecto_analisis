@@ -60,12 +60,12 @@ class MatrizTPM:
         """
         Elimina las filas y columnas de la matriz que no cumplen con las condiciones de background.
         """
-        self.listado_candidatos = self.obtener_indices(sistema_candidato, "1")
-        print(self.listado_candidatos, "listado candidatos")
-        self.listado_valores_futuros = self.obtener_indices(
+        self.__listado_candidatos = self.obtener_indices(sistema_candidato, "1")
+        print(self.__listado_candidatos, "listado candidatos")
+        self.__listado_valores_futuros = self.obtener_indices(
             self.__sistema.get_subsistema_futuro(), "1"
         )
-        print(self.listado_valores_futuros, "listado valores futuros")
+        print(self.__listado_valores_futuros, "listado valores futuros")
         self.__listado_valores_presentes = self.obtener_indices(
             self.__sistema.get_subsistema_presente(), "1"
         )
