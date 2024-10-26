@@ -28,7 +28,6 @@ class MatrizTPM:
     num_bits = math.ceil(math.log2(num_etiquetas))  
     
     labels = list(self.lil_endian_int(num_bits, num_etiquetas))
-    print("Etiquetas generadas en formato little-endian:", labels)
     
     if len(labels) >= columnas:
       self.__matriz.columns = labels[:columnas]
@@ -47,6 +46,15 @@ class MatrizTPM:
   Condiciones de background
   ------------------------------------------------------------------------------------------------
   '''
+
+  def condiciones_de_background(self, sistema_candidato, estado_inicial):
+    '''
+    Elimina las filas y columnas de la matriz que no cumplen con las condiciones de background.
+    '''
+    self.eliminar_filas_por_bits(sistema_candidato, estado_inicial)
+    self.eliminar_columnas_por_bits(sistema_candidato)
+    self.__matriz_candidata = self.__matriz.copy()
+
   def eliminar_filas_por_bits(self, sistema_candidato, estado_inicial):
     """
     Elimina las filas cuyos índices tengan un bit específico en la posición indicada.
@@ -82,7 +90,6 @@ class MatrizTPM:
 
     # Transponemos la matriz para que las columnas se conviertan en filas, agrupamos, y luego volvemos a transponer
     self.__matriz = self.__matriz.T.groupby(self.__matriz.columns, sort=False).sum().T
-    self.__matriz_candidata = self.__matriz.copy()
 
   def obtener_indices(self, sistema_candidato, num_indicado):
     """
@@ -100,6 +107,11 @@ class MatrizTPM:
   Marginalización por filas y columnas
   ------------------------------------------------------------------------------------------------
   '''
+
+  def marginalizar(self, subsistema_presente, subsistema_futuro):
+    marginalizar_filas(subsistema_presente)
+    marginalizar_columnas(subsistema_futuro)
+
   def marginalizar_filas(self, subsistema_presente):
     '''
     Marginaliza las filas de la matriz que no pertenecen al subsistema presente.
@@ -114,7 +126,6 @@ class MatrizTPM:
 
     # Transponemos la matriz para que las columnas se conviertan en filas, agrupamos, y luego volvemos a transponer
     self.__matriz_candidata = self.__matriz_candidata.groupby(self.__matriz_candidata.index, sort=False).mean()
-    print(self.__matriz_candidata)
     
   def marginalizar_columnas(self, subsistema_futuro):
     '''
@@ -130,7 +141,6 @@ class MatrizTPM:
 
     # Transponemos la matriz para que las columnas se conviertan en filas, agrupamos, y luego volvemos a transponer
     self.__matriz_candidata = self.__matriz_candidata.T.groupby(self.__matriz_candidata.columns, sort=False).sum().T
-    print(self.__matriz_candidata)
   
   def calcular_complemento(self, subsistema_futuro, subsistema_presente):
     '''
