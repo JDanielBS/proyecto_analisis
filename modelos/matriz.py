@@ -76,7 +76,7 @@ class MatrizTPM:
 
     self.__listado_valores_presentes = []
     
-  def.marginalizar_columnas(self, sistema, matriz):
+  def marginalizar_columnas(self, sistema, matriz):
     '''
     Elimina las columnas cuyos índices tengan un bit específico en la posición indicada.
     '''
@@ -90,8 +90,9 @@ class MatrizTPM:
 
     # Transponemos la matriz para que las columnas se conviertan en filas, agrupamos, y luego volvemos a transponer
     matriz = matriz.T.groupby(matriz.columns, sort=False).sum().T
+    print(matriz, 'imprimiendo dentro de marginalizar_columnas')
     
-    print(sistema, matriz)
+    return matriz
 
   def obtener_indices(self, sistema_candidato, num_indicado):
     """
@@ -111,9 +112,11 @@ class MatrizTPM:
   '''
 
   def marginalizar(self, subsistema_presente, subsistema_futuro):
-    self.marginalizar_filas(subsistema_presente)
-    self.marginalizar_columnas(subsistema_futuro, self.__matriz_candidata)
-    print(self.__matriz_candidata)
+      matriz_temp = self.__matriz_candidata.copy()
+      matriz_temp = self.marginalizar_filas(subsistema_presente)
+      matriz_temp = self.marginalizar_columnas(subsistema_futuro, matriz_temp)
+      self.__matriz_candidata = matriz_temp
+      print(self.__matriz_candidata, 'candidata después de marginalizar')
 
   def marginalizar_filas(self, subsistema_presente):
     '''
@@ -129,6 +132,7 @@ class MatrizTPM:
 
     # Transponemos la matriz para que las columnas se conviertan en filas, agrupamos, y luego volvemos a transponer
     self.__matriz_candidata = self.__matriz_candidata.groupby(self.__matriz_candidata.index, sort=False).mean()
+    return self.__matriz_candidata
     
   def calcular_complemento(self, subsistema_futuro, subsistema_presente):
     '''
