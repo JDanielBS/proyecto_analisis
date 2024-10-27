@@ -9,7 +9,7 @@ class MatrizTPM:
     def __init__(self, route):
         self.__matriz = pd.DataFrame = pd.read_csv(route, sep=",", header=None)
         self.__matriz_candidata = None
-        self.__matriz_estado_nodo = None
+        self.__matriz_estado_nodo_dict = {}
         self.__listado_candidatos = []
         self.__listado_valores_futuros = []
         self.__listado_valores_presentes = []
@@ -24,10 +24,10 @@ class MatrizTPM:
         return self.__listado_candidatos, self.__listado_valores_futuros, self.__listado_valores_presentes
 
     """
-  ------------------------------------------------------------------------------------------------
-  Poner en notación little endian
-  ------------------------------------------------------------------------------------------------
-  """
+    ------------------------------------------------------------------------------------------------
+    Poner en notación little endian
+    ------------------------------------------------------------------------------------------------
+    """
 
     def indexar_matriz(self):
         """
@@ -54,11 +54,10 @@ class MatrizTPM:
             yield bin(state)[2:].zfill(n)[::-1]
 
     """
-  ------------------------------------------------------------------------------------------------
-  Condiciones de background
-  ------------------------------------------------------------------------------------------------
-  """
-
+    ------------------------------------------------------------------------------------------------
+    Condiciones de background
+    ------------------------------------------------------------------------------------------------
+    """
     def condiciones_de_background(self, sistema_candidato, estado_inicial):
         """
         Elimina las filas y columnas de la matriz que no cumplen con las condiciones de background.
@@ -118,10 +117,10 @@ class MatrizTPM:
         return indices
 
     """
-  ------------------------------------------------------------------------------------------------
-  Marginalización por filas y columnas
-  ------------------------------------------------------------------------------------------------
-  """
+    ------------------------------------------------------------------------------------------------
+    Marginalización por filas y columnas
+    ------------------------------------------------------------------------------------------------
+    """
     def marginalizar_subsistema_entrada(self, subsistema_presente, subsistema_futuro):
       matriz_temp = self.__matriz_candidata.copy()
       matriz_temp= self.marginalizar(subsistema_presente, subsistema_futuro, matriz_temp)
@@ -192,36 +191,25 @@ class MatrizTPM:
         return matriz_complemento
         
     """
-  ------------------------------------------------------------------------------------------------
-  Marginalización por filas y columnas
-  ------------------------------------------------------------------------------------------------
-  """
+    ------------------------------------------------------------------------------------------------
+    Obtener estado nodo
+    ------------------------------------------------------------------------------------------------
+    """
     def obtener_estado_nodo(self):
         sistema_candidato = self.__sistema.get_sistema_candidato()
-        # Crear una cadena dinámica de ceros (000...) del tamaño de len(self.__listado_candidatos)
         cadena_dinamica = "0" * len(sistema_candidato)
         
-        carpeta = 'matrices_nodos'
-        if not os.path.exists(carpeta):
-            os.makedirs(carpeta)
-        
         for i in range(len(sistema_candidato)):
-          if i in self.__listado_candidatos:
-            # Crear una cadena con un solo "1" en la posición correspondiente a la iteración actual
-            subsistema_futuro = cadena_dinamica[:i] + "1" + cadena_dinamica[i+1:]
-            
-            # Reiniciar matriz_estado_nodo a una copia de __matriz
-            self.__matriz_estado_nodo = self.__matriz.copy()
-            
-            # Marginalizar columnas con el subsistema futuro
-            matriz_estado = self.marginalizar_columnas(subsistema_futuro, self.__matriz_estado_nodo)
-                    
-            # Guardar la matriz de estado nodo en un archivo CSV con el nombre basado en el índice
-            nombre_archivo = os.path.join(carpeta, f'matriz_estado_nodo_{i}.csv')
-            with open(nombre_archivo, 'w', newline='') as csvfile:
-                csvwriter = csv.writer(csvfile)
-                # Escribir la matriz de estado nodo en el archivo CSV fila por fila
-                for _, fila in matriz_estado.iterrows():
-                  csvwriter.writerow(fila.values)
-        
+            if i in self.__listado_candidatos:
+                # Crear una cadena con un solo "1" en la posición correspondiente a la iteración actual
+                subsistema_futuro = cadena_dinamica[:i] + "1" + cadena_dinamica[i+1:]
+                
+                # Reiniciar matriz_estado_nodo a una copia de __matriz
+                self.__matriz_estado_nodo = self.__matriz.copy()
+                
+                # Marginalizar columnas con el subsistema futuro
+                matriz_estado = self.marginalizar_columnas(subsistema_futuro, self.__matriz_estado_nodo)
+
+                # Guardar la matriz de estado nodo en un diccionario con el índice como clave
+                self.__matriz_estado_nodo_dict[i] = matriz_estado
             
