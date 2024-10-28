@@ -218,83 +218,13 @@ class MatrizTPM:
                 # Guardar la matriz de estado nodo en un diccionario con el índice como clave
                 self.__matriz_estado_nodo_dict[i] = matriz_estado
     
-    # def producto_tensorial_matrices(self, mat1, mat2, indices1, indices2):
-    #     # Crear una lista de combinaciones de columnas en little-endian para los índices seleccionados
-    #     n_cols_resultado = 2 ** (len(indices1) + len(indices2))
-    #     etiquetas_little_endian = [
-    #         "".join(str((i >> k) & 1) for k in range(len(indices1) + len(indices2)))
-    #         for i in range(n_cols_resultado)
-    #     ]
-
-    #     # Inicializar matriz resultado con nuevas columnas en formato little-endian
-    #     resultado = pd.DataFrame(index=mat1.index, columns=etiquetas_little_endian)
-
-    #     # Iterar sobre todas las combinaciones de posiciones en las columnas seleccionadas de ambas matrices
-    #     for col1, col2 in itertools.product(mat1.columns, mat2.columns):
-    #         # Obtener el índice de la combinación en formato little-endian
-    #         index_binario = ""
-            
-    #         # Llenar la combinación bit a bit con los bits en el orden little-endian
-    #         for i, bit in enumerate(indices1 + indices2):
-    #             if bit < len(indices1):
-    #                 index_binario += col1[bit]
-    #             else:
-    #                 index_binario += col2[bit - len(indices1)]
-
-    #         # Asignar el producto en la posición correspondiente
-    #         resultado[index_binario] = mat1[col1] * mat2[col2]
-
-    #     # Reemplazar NaN con 0 para valores sin combinación
-    #     resultado.fillna(0, inplace=True)
-        
-    #     return resultado
-    
-    # def producto_tensorial_matrices(self, mat1, mat2, indices1, indices2):
-    #     # Comprobar que ambas matrices tienen el mismo número de filas
-    #     if len(mat1) != len(mat2):
-    #         raise ValueError("Ambas matrices deben tener el mismo número de filas.")
-        
-    #     # Crear etiquetas en formato little-endian para las combinaciones de columnas
-    #     n_cols_resultado = 2 ** (len(indices1) + len(indices2))
-    #     etiquetas_little_endian = [
-    #         "".join(str((i >> k) & 1) for k in range(len(indices1) + len(indices2)))
-    #         for i in range(n_cols_resultado)
-    #     ]
-
-    #     # Crear la matriz de resultado con las nuevas etiquetas de columnas
-    #     resultado = pd.DataFrame(index=mat1.index, columns=etiquetas_little_endian)
-
-    #     # Iterar sobre cada fila para realizar el producto tensorial fila por fila
-    #     for row in mat1.index:
-    #         for col1, col2 in itertools.product(mat1.columns, mat2.columns):
-    #             # Construir el índice binario en formato little-endian
-    #             index_binario = ""
-    #             for i, bit in enumerate(indices1 + indices2):
-    #                 if bit < len(indices1):
-    #                     index_binario += str(col1)[bit]
-    #                 else:
-    #                     index_binario += str(col2)[bit - len(indices1)]
-                
-    #             # Calcular y asignar el producto
-    #             resultado.loc[row, index_binario] = mat1.loc[row, col1] * mat2.loc[row, col2]
-
-    #     # Llenar valores NaN con 0 para la matriz de salida
-    #     resultado.fillna(0, inplace=True)
-    
-    
     def producto_tensorial_matrices(self, mat1, mat2, indices1, indices2):
-        print(mat1, 'miremosss')
-        print(mat2, 'miremosss 2')
-        print('indices', indices1, indices2)
-        
         # Crear etiquetas en formato little-endian para las combinaciones de columnas
         n_cols_resultado = 2 ** (len(indices1) + len(indices2))
         etiquetas_little_endian = [
             "".join(str((i >> k) & 1) for k in range(len(indices1) + len(indices2)))
             for i in range(n_cols_resultado)
         ]
-        
-        print(etiquetas_little_endian, 'etiquetas_little_endian')
 
         # Crear la matriz de resultado con las nuevas etiquetas de columnas
         resultado = pd.DataFrame(index=[self.__estado_inicial_candidato], columns=etiquetas_little_endian)
@@ -302,15 +232,36 @@ class MatrizTPM:
         # Obtener la fila del estado inicial candidato
         mat1 = mat1.loc[[self.__estado_inicial_candidato]]
         mat2 = mat2.loc[[self.__estado_inicial_candidato]]
-        print(mat1, 'row_initial_candidate mt1')
-
-         # Iterar sobre cada combinación de columnas para realizar el producto tensorial
+        
+        # Iterar sobre cada combinación de columnas para realizar el producto tensorial
         for col1, col2 in itertools.product(mat1.columns, mat2.columns):
             # Construir el índice binario en formato little-endian de manera directa
-            index_binario = f"{col1}{col2}"  # Combinar las etiquetas de columnas directamente
-            
+            index_binario = ""
+            i, j, k = 0, 0, 0
+
+            # Iterar a través de los arreglos
+            while i < len(indices1) and j < len(indices2):
+                if indices1[i] < indices2[j]:
+                    index_binario += str(col1)[i]
+                    i += 1
+                else:
+                    index_binario += str(col2)[j]
+                    j += 1
+                k += 1
+
+            # Una vez que uno de los arreglos ha sido completado,
+            # ponemos los bits restantes
+            while i < len(indices1):
+                index_binario += str(col1)[i]
+                i += 1
+                k += 1
+            while j < len(indices2):
+                index_binario += str(col2)[j]
+                j += 1
+                k += 1
+
             # Calcular y asignar el producto
-              # Calcular y asignar el producto en la fila correspondiente
+            # Calcular y asignar el producto en la fila correspondiente
             resultado.at[self.__estado_inicial_candidato, index_binario] = mat1.at[self.__estado_inicial_candidato, col1] * mat2.at[self.__estado_inicial_candidato, col2]
           
 
@@ -321,7 +272,7 @@ class MatrizTPM:
 
             
     def prueba_producto_tensorial(self):
-   #mandamos del diccionario self.__matriz_estado_nodo_dict el indice 0 y 2
+        #mandamos del diccionario self.__matriz_estado_nodo_dict el indice 0 y 2
    
         matriz1 = self.__matriz_estado_nodo_dict[0]
         matriz2 = self.__matriz_estado_nodo_dict[2]
@@ -336,11 +287,8 @@ class MatrizTPM:
         resultado = self.producto_tensorial_matrices(matriz1, matriz2, indices1, indices2)
         print(resultado, 'ac')
         
-        resultado2= self.producto_tensorial_matrices(resultado, matriz3, indices3, indices4)
+        resultado2= self.producto_tensorial_matrices(matriz3, resultado, indices4, indices3)
         print(resultado2, 'ac*b')
     
     
-    
-#     B * AC
-#    ! A * C
     
