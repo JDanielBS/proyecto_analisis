@@ -1,8 +1,6 @@
 import pandas as pd
 import itertools
 import math
-import os
-import csv
 from modelos.sistema import Sistema
 
 
@@ -138,11 +136,12 @@ class MatrizTPM:
        matriz= matriz_temp
        return matriz
 
-    def marginalizar_filas(self, subsistema_presente, matriz):
+    def marginalizar_filas(self, subsistema_presente, matriz, bit):
         """
         Marginaliza las filas de la matriz que no pertenecen al subsistema presente.
         """
-        indices = self.obtener_indices(subsistema_presente, "0")
+        # 0 para el normal, 1 para el complemento
+        indices = self.obtener_indices(subsistema_presente, bit)
 
         nuevos_indices = [
             "".join([fila[i] for i in range(len(fila)) if i not in indices])
