@@ -22,6 +22,9 @@ class MatrizTPM:
       
     def get_listados(self):
         return self.__listado_candidatos, self.__listado_valores_futuros, self.__listado_valores_presentes
+    
+    def get_diccionario(self):
+        return self.__matriz_estado_nodo_dict
 
     """
     ------------------------------------------------------------------------------------------------
@@ -124,17 +127,18 @@ class MatrizTPM:
     Marginalización por filas y columnas
     ------------------------------------------------------------------------------------------------
     """
-    def marginalizar_subsistema_entrada(self, subsistema_presente, subsistema_futuro):
-      matriz_temp = self.__matriz_candidata.copy()
-      matriz_temp= self.marginalizar(subsistema_presente, subsistema_futuro, matriz_temp)
-      self.__matriz_candidata = matriz_temp
-
-    def marginalizar(self, subsistema_presente, subsistema_futuro, matriz):
-       matriz_temp = matriz.copy()
-       matriz_temp = self.marginalizar_filas(subsistema_presente, matriz_temp)
-       matriz_temp = self.marginalizar_columnas(subsistema_futuro, matriz_temp)
-       matriz= matriz_temp
-       return matriz
+    def marginalizar(self, lista_subsistema, matriz, bit):
+        matriz_temp = matriz.copy()
+        cadena_presente = self.pasar_lista_a_cadena(lista_subsistema, '0')
+        cadena_futuro = self.pasar_lista_a_cadena(lista_subsistema,'1')
+        indices_p = self.obtener_indices(cadena_presente, bit)
+        indices_f = self.obtener_indices(cadena_futuro, bit)
+        
+        for i in indices_f:
+           pass
+        matriz_temp = self.marginalizar_filas(cadena_presente, matriz_temp, bit)
+        matriz= matriz_temp
+        return matriz
 
     def marginalizar_filas(self, subsistema_presente, matriz, bit):
         """
@@ -269,6 +273,17 @@ class MatrizTPM:
         
         return resultado
 
+    """
+    ------------------------------------------------------------------------------------------------
+    Carpintería
+    ------------------------------------------------------------------------------------------------
+    """
+    def pasar_lista_a_cadena(self, lista, bit):
+        """
+        Convierte una lista de enteros en una cadena de bits.
+        """
+        cadena_dinamica = "0" * len(self.__listado_candidatos)
+        
             
     def prueba_producto_tensorial(self):
         #mandamos del diccionario self.__matriz_estado_nodo_dict el indice 0 y 2
