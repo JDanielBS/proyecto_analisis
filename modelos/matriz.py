@@ -282,9 +282,18 @@ class MatrizTPM:
         """
         Convierte una lista de enteros en una cadena de bits.
         """
-        cadena_dinamica = "0" * len(self.__listado_candidatos)
+        # Inicializa la cadena con ceros
+        cadena_dinamica = ["0"] * len(self.__listado_candidatos)
         
-            
+        # Recorre cada elemento de la lista
+        for estado, posicion in lista:
+            if estado == bit:
+                # Coloca un "1" en la posición indicada
+                cadena_dinamica[posicion] = "1"
+        
+        # Convierte la lista de caracteres en una cadena
+        return "".join(cadena_dinamica)
+
     def prueba_producto_tensorial(self):
         #mandamos del diccionario self.__matriz_estado_nodo_dict el indice 0 y 2
    
