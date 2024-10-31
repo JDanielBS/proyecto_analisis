@@ -20,7 +20,13 @@ class MatrizTPM:
         return print(self.__matriz)
       
     def get_listados(self):
-        return self.__listado_candidatos, self.__listado_valores_futuros, self.__listado_valores_presentes
+        # Print detallado para depurar los valores de las listas
+        print(f"Listado candidatos: {self.__listado_candidatos}")
+        print(f"Listado valores futuros: {self.__listado_valores_futuros}")
+        print(f"Listado valores presentes: {self.__listado_valores_presentes}")
+    
+    def get_valores_presentes(self):
+        return self.__listado_valores_presentes
     
     def get_diccionario(self):
         return self.__matriz_estado_nodo_dict
@@ -68,8 +74,7 @@ class MatrizTPM:
         self.__listado_valores_futuros = self.obtener_indices(
             self.__sistema.get_subsistema_futuro(), "1")
         self.__listado_valores_presentes = self.obtener_indices(
-            self.__sistema.get_subsistema_presente(), "1")
-        # a partir de los indices de listado candidatos, se obtiene el estado inicial candidato
+            self.__sistema.get_subsistema_presente(), "1")        # a partir de los indices de listado candidatos, se obtiene el estado inicial candidato
         self.__estado_inicial_candidato = "".join([self.__sistema.get_estado_inicial()[i] for i in self.__listado_candidatos])
         print(self.__estado_inicial_candidato)
         self.eliminar_filas_por_bits(self.__sistema.get_sistema_candidato(), self.__sistema.get_estado_inicial())
@@ -93,7 +98,6 @@ class MatrizTPM:
             for fila in self.__matriz.index
         ]
         self.__matriz.index = nuevos_indices
-        self.__listado_valores_presentes = []
 
     def eliminar_columnas_por_bits(self, sistema_candidato):
         """
@@ -166,12 +170,37 @@ class MatrizTPM:
         """
         Elimina las columnas cuyos índices tengan un bit específico en la posición indicada.
         """
+        print(sistema_futuro, 'sistema futuro en marginalizar')
         indices = self.obtener_indices(sistema_futuro, "0")
+        print(indices, 'indices en marginalizar')
+        
+        print(matriz.columns, 'columnas en marginalizar')
+        
+        nuevos_indices = []
 
-        nuevos_indices = [
-            "".join([columna[i] for i in range(len(columna)) if i not in indices])
-            for columna in matriz.columns
-        ]
+        # Recorre cada columna de la matriz
+        for columna in matriz.columns:
+            # Filtra los caracteres según los índices y únelos en una cadena
+            indice_filtrado = "".join([columna[i] for i in range(len(columna)) if i not in indices])
+            print(columna, 'columna en marginalizar')
+            print(indice_filtrado, 'indice filtrado en marginalizar')
+            nuevos_indices.append(indice_filtrado)
+
+        print(nuevos_indices, 'nuevos indices en marginalizar')
+
+        # nuevos_indices = [
+        #     "".join([columna[i] for i in range(len(columna)) if i not in indices])
+        #     for columna in matriz.columns
+        # ]
+        # print(nuevos_indices, 'nuevos indices en marginalizar')
+        
+         # Verificar y corregir cadenas vacías en nuevos_indices
+        if all(indice == '' for indice in nuevos_indices):
+            size = len(matriz.columns)
+            nuevos_indices = ['0'] * (size // 2) + ['1'] * (size // 2)
+        
+        print(nuevos_indices, 'nuevos indices corregidos en marginalizar')
+        
         matriz.columns = nuevos_indices
 
         # Transponemos la matriz para que las columnas se conviertan en filas, agrupamos, y luego volvemos a transponer
@@ -210,17 +239,20 @@ class MatrizTPM:
     def obtener_estado_nodo(self):
         sistema_candidato = self.__sistema.get_sistema_candidato()
         cadena_dinamica = "0" * len(sistema_candidato)
+        print(cadena_dinamica, 'cadena dinamica')
         
         for i in range(len(sistema_candidato)):
             if i in self.__listado_candidatos:
                 # Crear una cadena con un solo "1" en la posición correspondiente a la iteración actual
                 subsistema_futuro = cadena_dinamica[:i] + "1" + cadena_dinamica[i+1:]
+                print(subsistema_futuro, 'subsistema futuro')
                 
                 # Reiniciar matriz_estado_nodo a una copia de __matriz
-                self.__matriz_estado_nodo = self.__matriz.copy()
+                self.__matriz_estado_nodo = self.__matriz_candidata.copy()
                 
                 # Marginalizar columnas con el subsistema futuro
                 matriz_estado = self.marginalizar_columnas(subsistema_futuro, self.__matriz_estado_nodo)
+                print(matriz_estado, 'matriz estadooooooooos')
 
                 # Guardar la matriz de estado nodo en un diccionario con el índice como clave
                 self.__matriz_estado_nodo_dict[i] = matriz_estado
