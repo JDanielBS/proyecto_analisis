@@ -14,7 +14,6 @@ class MatrizTPM:
         self.__listado_valores_presentes = []
         self.__sistema = Sistema("archivos/estructura.csv")
         self.__estado_inicial_candidato= None
-
         self.indexar_matriz()
 
     def get_matriz(self):
@@ -61,20 +60,20 @@ class MatrizTPM:
     Condiciones de background
     ------------------------------------------------------------------------------------------------
     """
-    def condiciones_de_background(self, sistema_candidato, estado_inicial):
+    def condiciones_de_background(self):
         """
         Elimina las filas y columnas de la matriz que no cumplen con las condiciones de background.
         """
-        self.__listado_candidatos = self.obtener_indices(sistema_candidato, "1")
+        self.__listado_candidatos = self.obtener_indices(self.__sistema.get_sistema_candidato(), "1")
         self.__listado_valores_futuros = self.obtener_indices(
             self.__sistema.get_subsistema_futuro(), "1")
         self.__listado_valores_presentes = self.obtener_indices(
             self.__sistema.get_subsistema_presente(), "1")
         # a partir de los indices de listado candidatos, se obtiene el estado inicial candidato
-        self.__estado_inicial_candidato = "".join([estado_inicial[i] for i in self.__listado_candidatos])
+        self.__estado_inicial_candidato = "".join([self.__sistema.get_estado_inicial()[i] for i in self.__listado_candidatos])
         print(self.__estado_inicial_candidato)
-        self.eliminar_filas_por_bits(sistema_candidato, estado_inicial)
-        self.eliminar_columnas_por_bits(sistema_candidato)
+        self.eliminar_filas_por_bits(self.__sistema.get_sistema_candidato(), self.__sistema.get_estado_inicial())
+        self.eliminar_columnas_por_bits(self.__sistema.get_sistema_candidato())
         self.__matriz_candidata = self.__matriz.copy()
 
     def eliminar_filas_por_bits(self, sistema_candidato, estado_inicial):
@@ -128,14 +127,20 @@ class MatrizTPM:
     ------------------------------------------------------------------------------------------------
     """
     def marginalizar(self, lista_subsistema, matriz, bit):
+        bit_contrario = "0" if bit == "1" else "1"
+        #  [(0, 0), (1, 1), (0, 1), (1, 3)]
         matriz_temp = matriz.copy()
-        cadena_presente = self.pasar_lista_a_cadena(lista_subsistema, '0')
-        cadena_futuro = self.pasar_lista_a_cadena(lista_subsistema,'1')
-        indices_p = self.obtener_indices(cadena_presente, bit)
-        indices_f = self.obtener_indices(cadena_futuro, bit)
+        cadena_presente = self.pasar_lista_a_cadena(lista_subsistema, '0') # 1100
+        cadena_futuro = self.pasar_lista_a_cadena(lista_subsistema,'1') #
+        indices_p = self.obtener_indices(cadena_presente, bit_contrario)
+        indices_f = self.obtener_indices(cadena_futuro, bit_contrario)
+        
+        temporal= self.marginalizar_columnas("0" * len(self.__sistema.get_sistema_candidato()), self.__matriz_candidata.copy())  #el futuro es vacío                                                          
         
         for i in indices_f:
-           pass
+            key= self.__listado_candidatos[i]
+            estado_nodo = self.__matriz_estado_nodo_dict[key]
+        pass
         matriz_temp = self.marginalizar_filas(cadena_presente, matriz_temp, bit)
         matriz= matriz_temp
         return matriz
