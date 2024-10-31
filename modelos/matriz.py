@@ -282,8 +282,9 @@ class MatrizTPM:
         """
         Convierte una lista de enteros en una cadena de bits.
         """
-        # Inicializa la cadena con ceros
-        cadena_dinamica = ["0"] * len(self.__listado_candidatos)
+        # Inicializa la cadena con ceros y la convierte en una lista mutable
+        cadena_dinamica = list("0" * len(self.__sistema.get_sistema_candidato()))
+        print("Cadena dinámica inicial:", "".join(cadena_dinamica))
         
         # Recorre cada elemento de la lista
         for estado, posicion in lista:
@@ -291,8 +292,26 @@ class MatrizTPM:
                 # Coloca un "1" en la posición indicada
                 cadena_dinamica[posicion] = "1"
         
-        # Convierte la lista de caracteres en una cadena
-        return "".join(cadena_dinamica)
+        cadena_dinamica = "".join([cadena_dinamica[i] for i in self.__listado_candidatos])
+        
+        # Convierte la lista de caracteres de vuelta a una cadena
+        return cadena_dinamica
+
+    def prueba_lista(self):
+        # Verificar que no ingrese variables que no estén en el sistema candidato
+        # 1101 ABD A, B, D = 0, 1, 3
+        lista = [(0, 0), (1, 1), (0, 1), (1, 3)]
+        # BD|ab
+        # 0101 cadena futuro 011
+        # 1100 cadena presente 110
+        #0101 cadena futuro 011=  100 
+        
+        cadena_presente = self.pasar_lista_a_cadena(lista, 0)
+        cadena_futuro = self.pasar_lista_a_cadena(lista, 1)
+        
+        print(cadena_presente, "cadena presente")
+        print(cadena_futuro, "cadena futuro")
+
 
     def prueba_producto_tensorial(self):
         #mandamos del diccionario self.__matriz_estado_nodo_dict el indice 0 y 2
@@ -312,6 +331,8 @@ class MatrizTPM:
         
         resultado2= self.producto_tensorial_matrices(matriz3, resultado, indices4, indices3)
         print(resultado2, 'ac*b')
+        
+    
     
     
     
