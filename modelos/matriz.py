@@ -129,21 +129,20 @@ class MatrizTPM:
     def marginalizar(self, lista_subsistema, matriz, bit):
         bit_contrario = "0" if bit == "1" else "1"
         #  [(0, 0), (1, 1), (0, 1), (1, 3)]
-        matriz_temp = matriz.copy()
-        cadena_presente = self.pasar_lista_a_cadena(lista_subsistema, '0') # 1100
-        cadena_futuro = self.pasar_lista_a_cadena(lista_subsistema,'1') #
-        indices_p = self.obtener_indices(cadena_presente, bit_contrario)
+        cadena_presente = self.pasar_lista_a_cadena(lista_subsistema, '0')
+        cadena_futuro = self.pasar_lista_a_cadena(lista_subsistema,'1')
         indices_f = self.obtener_indices(cadena_futuro, bit_contrario)
         
-        temporal= self.marginalizar_columnas("0" * len(self.__sistema.get_sistema_candidato()), self.__matriz_candidata.copy())  #el futuro es vacío                                                          
-        
+        temporal = self.marginalizar_columnas("0" * len(self.__sistema.get_sistema_candidato()), self.__matriz_candidata.copy())  #el futuro es vacío                                                          
+        indices_temporal = []
         for i in indices_f:
-            key= self.__listado_candidatos[i]
+            key = self.__listado_candidatos[i]
             estado_nodo = self.__matriz_estado_nodo_dict[key]
-        pass
-        matriz_temp = self.marginalizar_filas(cadena_presente, matriz_temp, bit)
-        matriz= matriz_temp
-        return matriz
+            temporal = self.producto_tensorial_matrices(temporal, estado_nodo, indices_temporal, [key])
+            indices_temporal.append(key)
+        
+        matriz_temp = self.marginalizar_filas(cadena_presente, temporal, bit)
+        return matriz_temp
 
     def marginalizar_filas(self, subsistema_presente, matriz, bit):
         """
