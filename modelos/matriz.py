@@ -138,16 +138,15 @@ class MatrizTPM:
         #  [(0, 0), (1, 1), (0, 1), (1, 3)]
         cadena_presente = self.pasar_lista_a_cadena(lista_subsistema, 0)
         cadena_futuro = self.pasar_lista_a_cadena(lista_subsistema, 1)
-        indices_f = self.obtener_indices(cadena_futuro, bit)
-        
-        temporal = self.marginalizar_columnas("0" * len(self.__sistema.get_sistema_candidato()), self.__matriz_candidata.copy())  #el futuro es vacío                                                          
-        indices_temporal = []
-        for i in indices_f:
-            key = self.__listado_candidatos[i]
-            estado_nodo = self.__matriz_estado_nodo_dict[key]
-            temporal = self.producto_tensorial_matrices(temporal, estado_nodo, indices_temporal, [key])
-            indices_temporal.append(key)
-        
+        indices_futuros = self.obtener_indices(cadena_futuro, bit)
+        print(indices_futuros, 'indices futuros')
+        print(self.__listado_candidatos)
+        if len(indices_futuros) == 1:
+            key = self.__listado_candidatos[indices_futuros[0]]
+            temporal = self.__matriz_estado_nodo_dict[key]
+        else:
+            temporal = self.marginalizar_columnas(cadena_futuro, self.__matriz_candidata.copy(), bit)
+
         matriz_temp = self.marginalizar_filas(cadena_presente, temporal, bit)
         return matriz_temp
 
@@ -168,10 +167,17 @@ class MatrizTPM:
         # 0 para el normal, 1 para el complemento
         indices = self.obtener_indices(subsistema_presente, bit)
 
-        nuevos_indices = [
-            "".join([fila[i] for i in range(len(fila)) if i not in indices])
-            for fila in matriz.index
-        ]
+        nuevos_indices = []
+
+        # Recorre cada fila de la matriz
+        if(indices != []):
+            nuevos_indices = [
+                "".join([fila[i] for i in range(len(fila)) if i in indices]) or fila[-1]
+                for fila in matriz.index
+            ]
+        else:
+            for _ in range(len(matriz.columns)):
+                nuevos_indices.append('')
         
         matriz.index = nuevos_indices
 
@@ -179,12 +185,11 @@ class MatrizTPM:
         matriz = matriz.groupby(matriz.index, sort=False).mean()
         return matriz
       
-    def marginalizar_columnas(self, sistema_futuro, matriz):
+    def marginalizar_columnas(self, sistema_futuro, matriz, bit):
         """
         Elimina las columnas cuyos índices tengan un bit específico en la posición indicada.
         """
-        indices = self.obtener_indices(sistema_futuro, "1")
-        print(indices)
+        indices = self.obtener_indices(sistema_futuro, bit)
         
         nuevos_indices = []
 
@@ -203,30 +208,6 @@ class MatrizTPM:
         # Transponemos la matriz para que las columnas se conviertan en filas, agrupamos, y luego volvemos a transponer
         matriz = matriz.T.groupby(matriz.columns, sort=False).sum().T
         return matriz
-
-    def calcular_complemento(self, subsistema_futuro, subsistema_presente):
-        """
-        Calcula la matriz complemento tomando en cuenta el subsistema futuro y presente
-        """
-        matriz_complemento = self.__matriz.copy()
-        indices_f = self.obtener_indices(subsistema_futuro, "1")
-        indices_p = self.obtener_indices(subsistema_presente, "1")
-
-        nuevos_indices = [
-            "".join([columna[i] for i in range(len(columna)) if i not in indices])
-            for columna in self.__matriz_candidata.columns
-        ]
-        self.__matriz_candidata.columns = nuevos_indices
-
-        # Transponemos la matriz para que las columnas se conviertan en filas, agrupamos, y luego volvemos a transponer
-        self.__matriz_candidata = (
-            self.__matriz_candidata.T.groupby(
-                self.__matriz_candidata.columns, sort=False
-            )
-            .sum()
-            .T
-        )
-        return matriz_complemento
         
     """
     ------------------------------------------------------------------------------------------------
@@ -247,7 +228,7 @@ class MatrizTPM:
                 self.__matriz_estado_nodo = self.__matriz_candidata.copy()
                 
                 # Marginalizar columnas con el subsistema futuro
-                matriz_estado = self.marginalizar_columnas(subsistema_futuro, self.__matriz_estado_nodo)
+                matriz_estado = self.marginalizar_columnas(subsistema_futuro, self.__matriz_estado_nodo, '1')
                 print(matriz_estado, 'matriz estadooooooooos')
 
                 # Guardar la matriz de estado nodo en un diccionario con el índice como clave
