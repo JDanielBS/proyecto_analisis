@@ -130,12 +130,15 @@ class MatrizTPM:
     Marginalización por filas y columnas
     ------------------------------------------------------------------------------------------------
     """
-    def marginalizar(self, lista_subsistema, matriz, bit):
-        bit_contrario = "0" if bit == "1" else "1"
+    def marginalizar(self, lista_subsistema, bit):
+        '''
+        Marginaliza las filas y columnas de la matriz que no pertenecen al subsistema presente y futuro.
+        Bit en 1 si se quiere hacer de manera normal, 0 si se quiere el complemento.
+        '''
         #  [(0, 0), (1, 1), (0, 1), (1, 3)]
-        cadena_presente = self.pasar_lista_a_cadena(lista_subsistema, '0')
-        cadena_futuro = self.pasar_lista_a_cadena(lista_subsistema,'1')
-        indices_f = self.obtener_indices(cadena_futuro, bit_contrario)
+        cadena_presente = self.pasar_lista_a_cadena(lista_subsistema, 0)
+        cadena_futuro = self.pasar_lista_a_cadena(lista_subsistema, 1)
+        indices_f = self.obtener_indices(cadena_futuro, bit)
         
         temporal = self.marginalizar_columnas("0" * len(self.__sistema.get_sistema_candidato()), self.__matriz_candidata.copy())  #el futuro es vacío                                                          
         indices_temporal = []
@@ -147,6 +150,16 @@ class MatrizTPM:
         
         matriz_temp = self.marginalizar_filas(cadena_presente, temporal, bit)
         return matriz_temp
+
+    def prueba_marginalizar(self):
+        #mandamos del diccionario self.__matriz_estado_nodo_dict el indice 0 y 2
+        lista = [(0, 0), (1, 1), (0, 1), (1, 3)]
+        # BD|ab, 011|110
+        matriz = self.marginalizar(lista, '1')
+        print(matriz)
+
+        matriz = self.marginalizar(lista, '0')
+        print(matriz)
 
     def marginalizar_filas(self, subsistema_presente, matriz, bit):
         """
@@ -170,36 +183,20 @@ class MatrizTPM:
         """
         Elimina las columnas cuyos índices tengan un bit específico en la posición indicada.
         """
-        print(sistema_futuro, 'sistema futuro en marginalizar')
-        indices = self.obtener_indices(sistema_futuro, "0")
-        print(indices, 'indices en marginalizar')
-        
-        print(matriz.columns, 'columnas en marginalizar')
+        indices = self.obtener_indices(sistema_futuro, "1")
+        print(indices)
         
         nuevos_indices = []
 
         # Recorre cada columna de la matriz
-        for columna in matriz.columns:
-            # Filtra los caracteres según los índices y únelos en una cadena
-            indice_filtrado = "".join([columna[i] for i in range(len(columna)) if i not in indices])
-            print(columna, 'columna en marginalizar')
-            print(indice_filtrado, 'indice filtrado en marginalizar')
-            nuevos_indices.append(indice_filtrado)
-
-        print(nuevos_indices, 'nuevos indices en marginalizar')
-
-        # nuevos_indices = [
-        #     "".join([columna[i] for i in range(len(columna)) if i not in indices])
-        #     for columna in matriz.columns
-        # ]
-        # print(nuevos_indices, 'nuevos indices en marginalizar')
-        
-         # Verificar y corregir cadenas vacías en nuevos_indices
-        if all(indice == '' for indice in nuevos_indices):
-            size = len(matriz.columns)
-            nuevos_indices = ['0'] * (size // 2) + ['1'] * (size // 2)
-        
-        print(nuevos_indices, 'nuevos indices corregidos en marginalizar')
+        if(indices != []):
+            nuevos_indices = [
+                "".join([columna[i] for i in range(len(columna)) if i in indices]) or columna[-1]
+                for columna in matriz.columns
+            ]
+        else:
+            for _ in range(len(matriz.columns)):
+                nuevos_indices.append('')
         
         matriz.columns = nuevos_indices
 
@@ -239,7 +236,6 @@ class MatrizTPM:
     def obtener_estado_nodo(self):
         sistema_candidato = self.__sistema.get_sistema_candidato()
         cadena_dinamica = "0" * len(sistema_candidato)
-        print(cadena_dinamica, 'cadena dinamica')
         
         for i in range(len(sistema_candidato)):
             if i in self.__listado_candidatos:
@@ -320,7 +316,6 @@ class MatrizTPM:
         """
         # Inicializa la cadena con ceros y la convierte en una lista mutable
         cadena_dinamica = list("0" * len(self.__sistema.get_sistema_candidato()))
-        print("Cadena dinámica inicial:", "".join(cadena_dinamica))
         
         # Recorre cada elemento de la lista
         for estado, posicion in lista:
