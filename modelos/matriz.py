@@ -1,6 +1,7 @@
 import pandas as pd
 import itertools
 import math
+from icecream import ic
 from modelos.sistema import Sistema
 
 
@@ -8,12 +9,13 @@ class MatrizTPM:
     def __init__(self, route):
         self.__matriz = pd.read_csv(route, sep=",", header=None)
         self.__matriz_candidata = None
+        self.__matriz_subsistema= None
         self.__matriz_estado_nodo_dict = {}
         self.__listado_candidatos = []
         self.__listado_valores_futuros = []
         self.__listado_valores_presentes = []
         self.__sistema = Sistema("archivos/estructura.csv")
-        self.__estado_inicial_candidato= None
+        self.__estado_inicial_subsistema= None
         self.indexar_matriz()
 
     def get_matriz(self):
@@ -75,8 +77,8 @@ class MatrizTPM:
             self.__sistema.get_subsistema_futuro(), "1")
         self.__listado_valores_presentes = self.obtener_indices(
             self.__sistema.get_subsistema_presente(), "1")        # a partir de los indices de listado candidatos, se obtiene el estado inicial candidato
-        self.__estado_inicial_candidato = "".join([self.__sistema.get_estado_inicial()[i] for i in self.__listado_candidatos])
-        print(self.__estado_inicial_candidato)
+        self.__estado_inicial_subsistema = "".join([self.__sistema.get_estado_inicial()[i] for i in self.__listado_valores_presentes])
+        print(self.__estado_inicial_subsistema, 'estado_ini_subsistema')
         self.eliminar_filas_por_bits(self.__sistema.get_sistema_candidato(), self.__sistema.get_estado_inicial())
         self.eliminar_columnas_por_bits(self.__sistema.get_sistema_candidato())
         self.__matriz_candidata = self.__matriz.copy()
@@ -124,6 +126,33 @@ class MatrizTPM:
             if bit == num_indicado:
                 indices.append(idx)
         return indices
+    
+    def matriz_subsistema(self):
+        # leer el subsistema presente y futuro
+        indices_f= self.obtener_indices(self.__sistema.get_subsistema_futuro(), '1') #0 y 3 A D 
+        indices_p= self.obtener_indices(self.__sistema.get_subsistema_presente(), '1') #0 y 1 ab
+        # obtener el estado_nodo del diccionario de acuerdo a los indices_f
+        diccionario_marginalizadas= {}
+        for i in indices_f:
+            matriz_futuro= self.__matriz_estado_nodo_dict[i]
+            ic(matriz_futuro)
+            matriz_marginalizada= self.marginalizar_filas(self.__sistema.get_subsistema_presente(), matriz_futuro, '1')
+            diccionario_marginalizadas[i]= matriz_marginalizada
+        ic(diccionario_marginalizadas)
+        
+        temporal= diccionario_marginalizadas[indices_f[0]]   
+        for i in range(1, len(indices_f)):
+            resultado= self.producto_tensorial_matrices(diccionario_marginalizadas[indices_f[i-1]], diccionario_marginalizadas[indices_f[i]], [indices_f[i-1]],[indices_f[i]] )
+            ic(resultado)
+        print(diccionario_marginalizadas[indices_f[0]], 'matriz 1')
+        print(diccionario_marginalizadas[indices_f[1]], 'matriz 2')
+        ic([indices_f[0]])
+        ic([indices_f[1]])
+        
+        #guardar en un diccionario la multiplicacion de las matrices
+        vector= resultado.values
+        ic(vector)
+
 
     """
     ------------------------------------------------------------------------------------------------
@@ -150,21 +179,21 @@ class MatrizTPM:
         matriz_temp = self.marginalizar_filas(cadena_presente, temporal, bit)
         return matriz_temp
 
-    def prueba_marginalizar(self):
-        #mandamos del diccionario self.__matriz_estado_nodo_dict el indice 0 y 2
-        lista = [(0, 0), (1, 1), (0, 1), (1, 3)]
-        # BD|ab, 011|110
-        matriz = self.marginalizar(lista, '1')
-        print(matriz)
+    # def prueba_marginalizar(self):
+    #     #mandamos del diccionario self.__matriz_estado_nodo_dict el indice 0 y 2
+    #     lista = [(0, 0), (1, 1), (0, 1), (1, 3)]
+    #     # BD|ab, 011|110
+    #     matriz = self.marginalizar(lista, '1')
+    #     print(matriz)
 
-        matriz = self.marginalizar(lista, '0')
-        print(matriz)
+    #     matriz = self.marginalizar(lista, '0')
+    #     print(matriz)
 
     def marginalizar_filas(self, subsistema_presente, matriz, bit):
         """
         Marginaliza las filas de la matriz que no pertenecen al subsistema presente.
         """
-        # 0 para el normal, 1 para el complemento
+        # 1 para el normal, 0 para el complemento
         indices = self.obtener_indices(subsistema_presente, bit)
 
         nuevos_indices = []
@@ -243,11 +272,11 @@ class MatrizTPM:
         ]
 
         # Crear la matriz de resultado con las nuevas etiquetas de columnas
-        resultado = pd.DataFrame(index=[self.__estado_inicial_candidato], columns=etiquetas_little_endian)
+        resultado = pd.DataFrame(index=[self.__estado_inicial_subsistema], columns=etiquetas_little_endian)
 
         # Obtener la fila del estado inicial candidato
-        mat1 = mat1.loc[[self.__estado_inicial_candidato]]
-        mat2 = mat2.loc[[self.__estado_inicial_candidato]]
+        mat1 = mat1.loc[[self.__estado_inicial_subsistema]]
+        mat2 = mat2.loc[[self.__estado_inicial_subsistema]]
         
         # Iterar sobre cada combinación de columnas para realizar el producto tensorial
         for col1, col2 in itertools.product(mat1.columns, mat2.columns):
@@ -278,7 +307,7 @@ class MatrizTPM:
 
             # Calcular y asignar el producto
             # Calcular y asignar el producto en la fila correspondiente
-            resultado.at[self.__estado_inicial_candidato, index_binario] = mat1.at[self.__estado_inicial_candidato, col1] * mat2.at[self.__estado_inicial_candidato, col2]
+            resultado.at[self.__estado_inicial_subsistema, index_binario] = mat1.at[self.__estado_inicial_subsistema, col1] * mat2.at[self.__estado_inicial_subsistema, col2]
           
 
         # Llenar valores NaN con 0 para la matriz de salida
