@@ -11,6 +11,7 @@ class MatrizTPM:
         self.__matriz_candidata = None
         self.__matriz_subsistema = None
         self.__matriz_estado_nodo_dict = {}
+        self.__matriz_estado_nodo_marginalizadas = {}
         self.__listado_candidatos = []
         self.__listado_valores_futuros = []
         self.__listado_valores_presentes = []
@@ -130,35 +131,34 @@ class MatrizTPM:
         return indices
     
     def matriz_subsistema(self):
+        # [(0,0), (1,0), (1,1), (1,2)]
         # leer el subsistema presente y futuro
-        indices_f= self.obtener_indices(self.__sistema.get_subsistema_futuro(), '1') #0 y 3 A D 
-        indices_p= self.obtener_indices(self.__sistema.get_subsistema_presente(), '1') #0 y 1 ab
+        indices_f= self.obtener_indices(self.__sistema.get_subsistema_futuro(), '1') # 0, 1, 2
         # obtener el estado_nodo del diccionario de acuerdo a los indices_f
-        diccionario_marginalizadas = {}
-        for i in indices_f:
-            matriz_futuro= self.__matriz_estado_nodo_dict[i]
-            matriz_marginalizada= self.marginalizar_filas(self.__sistema.get_subsistema_presente(), matriz_futuro, '1')
-            diccionario_marginalizadas[i] = matriz_marginalizada
-        
-        for i in range(1, len(indices_f)):
-            resultado= self.producto_tensorial_matrices(diccionario_marginalizadas[indices_f[i-1]], diccionario_marginalizadas[indices_f[i]], [indices_f[i-1]],[indices_f[i]] )
-        
-        #guardar en un diccionario la multiplicacion de las matrices
-        vector= resultado.values
-        
-        self.__matriz_subsistema= vector
 
-    def obtener_vector_subsitema_teorico(self):
-        '''
-        Marginaliza las filas y columnas de la matriz que no pertenecen al subsistema presente y futuro.
-        Bit en 1 si se quiere hacer de manera normal, 0 si se quiere el complemento.
-        '''
-        subsistema_futuro = self.__sistema.get_subsistema_futuro()
-        subsistema_presente = self.__sistema.get_subsistema_presente()
-        temporal = self.marginalizar_columnas(subsistema_futuro, self.__matriz_candidata.copy(), '1')
-        matriz_temp = self.marginalizar_filas(subsistema_presente, temporal, '1')
-        matriz_temp = matriz_temp.loc[[self.__estado_inicial_subsistema]]
-        self.__matriz_subsistema = matriz_temp
+        temporal = self.marginalizar_columnas('0'*len(self.__listado_candidatos), self.__matriz_candidata.copy(), '1') # 000, matriz de unos
+        temporal_marginalizada = self.marginalizar_filas(self.__sistema.get_subsistema_presente(), temporal, '1')
+        indices_temporal = []
+        for i in indices_f:
+            matriz_futuro = self.__matriz_estado_nodo_dict[i].copy()
+            matriz_marginalizada = self.marginalizar_filas(self.__sistema.get_subsistema_presente(), matriz_futuro, '1')
+            self.__matriz_estado_nodo_marginalizadas[i] = matriz_marginalizada
+            temporal_marginalizada = self.producto_tensorial_matrices(temporal_marginalizada, matriz_marginalizada, indices_temporal, [i])
+            indices_temporal.append(i)
+            
+        self.__matriz_subsistema = temporal_marginalizada.values
+
+    # def obtener_vector_subsitema_teorico(self):
+    #     '''
+    #     Marginaliza las filas y columnas de la matriz que no pertenecen al subsistema presente y futuro.
+    #     Bit en 1 si se quiere hacer de manera normal, 0 si se quiere el complemento.
+    #     '''
+    #     subsistema_futuro = self.__sistema.get_subsistema_futuro()
+    #     subsistema_presente = self.__sistema.get_subsistema_presente()
+    #     temporal = self.marginalizar_columnas(subsistema_futuro, self.__matriz_candidata.copy(), '1')
+    #     matriz_temp = self.marginalizar_filas(subsistema_presente, temporal, '1')
+    #     matriz_temp = matriz_temp.loc[[self.__estado_inicial_subsistema]]
+    #     self.__matriz_subsistema = matriz_temp
 
     """
     ------------------------------------------------------------------------------------------------

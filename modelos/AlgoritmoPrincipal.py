@@ -8,10 +8,9 @@ class AlgoritmoPrincipal:
     def estrategia1(self):
         self.__matriz.condiciones_de_background()
         self.__matriz.obtener_estado_nodo()
-        # print(self.__matriz.get_diccionario())
-        self.__matriz.prueba_producto_tensorial()
-        self.__matriz.obtener_vector_subsitema_teorico()
-        self.encontrar_particion_menor()
+        # ic(self.__matriz.get_diccionario())
+        self.__matriz.matriz_subsistema()
+        #self.encontrar_particion_menor()
 
     def encontrar_particion_menor(self):
         conjuntoV = self.__matriz.pasar_cadena_a_lista()
