@@ -120,7 +120,7 @@ class MatrizTPM:
 
     def obtener_indices(self, sistema_candidato, num_indicado):
         """
-        Obtiene los índices de todas las apariciones de '0' en representación binaria.
+        Obtiene los índices de todas las apariciones del numero indicado en representación binaria.
         """
         indices = []
 
@@ -165,14 +165,31 @@ class MatrizTPM:
     Marginalización por filas y columnas
     ------------------------------------------------------------------------------------------------
     """
-    def marginalizar(self, lista_subsistema, bit):
+    def marginalizar_normal_complemento(self, lista_subsistema):
+        cadena_presente = self.pasar_lista_a_cadena(lista_subsistema, 0)
+        cadena_futuro = self.pasar_lista_a_cadena(lista_subsistema, 1)
+
+        normal = self.marginalizar_bits(cadena_presente, cadena_futuro, '1')
+
+        for index in range(len(cadena_presente)):
+            index_presente = self.__listado_candidatos[index]
+            if index_presente not in self.__listado_valores_presentes:
+                cadena_presente = cadena_presente[:index] + '1' + cadena_presente[index+1:]
+        for index in range(len(cadena_futuro)):
+            index_futuro = self.__listado_candidatos[index]
+            if index_futuro not in self.__listado_valores_futuros:
+                cadena_futuro = cadena_futuro[:index] + '1' + cadena_futuro[index+1:]
+
+        complemento = self.marginalizar_bits(cadena_presente, cadena_futuro, '0')
+
+        return normal, complemento
+
+    def marginalizar_bits(self, cadena_presente, cadena_futuro, bit):
         '''
         Marginaliza las filas y columnas de la matriz que no pertenecen al subsistema presente y futuro.
         Bit en 1 si se quiere hacer de manera normal, 0 si se quiere el complemento.
         '''
         #  [(0, 0), (1, 1), (0, 1), (1, 3)]
-        cadena_presente = self.pasar_lista_a_cadena(lista_subsistema, 0) #100
-        cadena_futuro = self.pasar_lista_a_cadena(lista_subsistema, 1) #100 a bc   V=
         indices_futuros = self.obtener_indices(cadena_futuro, bit)
         if len(indices_futuros) == 1:
             key = self.__listado_candidatos[indices_futuros[0]]
@@ -209,7 +226,7 @@ class MatrizTPM:
                 for fila in matriz.index
             ]
         else:
-            for _ in range(len(matriz.columns)):
+            for _ in range(len(matriz.index)):
                 nuevos_indices.append('')
         
         matriz.index = nuevos_indices

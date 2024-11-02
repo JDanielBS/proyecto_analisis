@@ -9,6 +9,7 @@ class AlgoritmoPrincipal:
         self.__matriz.condiciones_de_background()
         self.__matriz.obtener_estado_nodo()
         # print(self.__matriz.get_diccionario())
+        self.__matriz.prueba_producto_tensorial()
         self.__matriz.obtener_vector_subsitema_teorico()
         self.encontrar_particion_menor()
 
@@ -43,7 +44,6 @@ class AlgoritmoPrincipal:
                     subsistema.append(j)
                 ic(subsistema)
                 #(0, 0), (1, 0)
-                matriz_normal = self.__matriz.marginalizar(subsistema, '0')
-                matriz_complemento = self.__matriz.marginalizar(subsistema, '1')
+                matriz_normal, matriz_complemento = self.__matriz.marginalizar_normal_complemento(subsistema)
                 print('Matriz normal', matriz_normal)
                 print('Matriz complemento', matriz_complemento)
