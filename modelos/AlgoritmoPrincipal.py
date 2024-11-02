@@ -1,6 +1,8 @@
 from modelos.matriz import MatrizTPM
 from icecream import ic
 from modelos.Emd import Emd
+import numpy as np
+
 
 class AlgoritmoPrincipal:
     def __init__(self):
@@ -13,6 +15,7 @@ class AlgoritmoPrincipal:
         # ic(self.__matriz.get_diccionario())
         self.__matriz.matriz_subsistema()
         # ic(self.__matriz.get_dic_marginalizadas())
+        self.__matriz.get_matriz_subsistema()
         self.encontrar_particion_menor()
 
     def encontrar_particion_menor(self):
@@ -47,5 +50,7 @@ class AlgoritmoPrincipal:
 
                 matriz_normal, matriz_complemento = self.__matriz.marginalizar_normal_complemento(subsistema)
                 resultado_tensorial = self.__matriz.producto_tensorial_matrices(matriz_normal[0], matriz_complemento[0], matriz_normal[1], matriz_complemento[1])
-                resultados_lista = resultado_tensorial.iloc[0].values.tolist()
-                ic(resultados_lista)
+                resultados_lista = np.array(resultado_tensorial.iloc[0].values.tolist())
+               
+                resultadoEMD= self.__emd.calcularEMD(resultados_lista, self.__matriz.get_matriz_subsistema())
+                ic(resultadoEMD)

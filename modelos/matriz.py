@@ -2,6 +2,7 @@ import pandas as pd
 import itertools
 import math
 from icecream import ic
+import numpy as np
 from modelos.sistema import Sistema
 
 
@@ -23,7 +24,7 @@ class MatrizTPM:
         return print(self.__matriz)
     
     def get_matriz_subsistema(self):
-        return print(self.__matriz_subsistema)
+        return self.__matriz_subsistema
       
     def get_listados(self):
         # Print detallado para depurar los valores de las listas
@@ -149,7 +150,7 @@ class MatrizTPM:
             temporal_marginalizada = self.producto_tensorial_matrices(temporal_marginalizada, matriz_marginalizada, indices_temporal, [i])
             indices_temporal.append(i)
             
-        self.__matriz_subsistema = temporal_marginalizada.values
+        self.__matriz_subsistema = np.array(temporal_marginalizada.iloc[0].values.tolist())
 
     # def obtener_vector_subsitema_teorico(self):
     #     '''
