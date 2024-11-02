@@ -202,14 +202,14 @@ class MatrizTPM:
         if len(indices_futuros) == 1:
             key = self.__listado_valores_futuros[indices_futuros[0]]
             temporal = self.__matriz_estado_nodo_marginalizadas[key] #0
-            temporal_marginalizada= self.marginalizar_filas(cadena_presente, temporal, bit)
+            temporal_marginalizada = self.marginalizar_filas(cadena_presente, temporal, bit)
         else:
             temporal = self.marginalizar_columnas('0'*len(self.__listado_candidatos), self.__matriz_candidata.copy(), '1') # 000, matriz de unos
             temporal_marginalizada = self.marginalizar_filas(cadena_presente, temporal, '1')
             indices_temporal = []
             for i in indices_futuros:
                 matriz_futuro = self.__matriz_estado_nodo_marginalizadas[i].copy()
-                matriz_marginalizada= self.marginalizar_filas(cadena_presente, matriz_futuro, bit)
+                matriz_marginalizada = self.marginalizar_filas(cadena_presente, matriz_futuro, bit)
                 temporal_marginalizada = self.producto_tensorial_matrices(temporal_marginalizada, matriz_marginalizada, indices_temporal, [i])
                 indices_temporal.append(i)
 
@@ -297,7 +297,6 @@ class MatrizTPM:
                 # Guardar la matriz de estado nodo en un diccionario con el índice como clave
                 self.__matriz_estado_nodo_dict[i] = matriz_estado
     
-    # todo: hacer metodo que halle el complemento, basandose en el conjunto v (subsistema) guardar lo que se seleccionó como normal
     
     def producto_tensorial_matrices(self, mat1, mat2, indices1, indices2):
         # Crear etiquetas en formato little-endian para las combinaciones de columnas
@@ -309,10 +308,19 @@ class MatrizTPM:
 
         # Crear la matriz de resultado con las nuevas etiquetas de columnas
         resultado = pd.DataFrame(index=[self.__estado_inicial_subsistema], columns=etiquetas_little_endian)
-        
+
         # Obtener la fila del estado inicial candidato
-        mat1 = mat1.loc[[self.__estado_inicial_subsistema]]
-        mat2 = mat2.loc[[self.__estado_inicial_subsistema]]
+        if len(mat1) == 1 and mat1.index[0] == '':
+            fila_inicial_m1 = ''
+        else:
+            fila_inicial_m1 = self.__estado_inicial_subsistema
+        if len(mat2) == 1 and mat2.index[0] == '':
+            fila_inicial_m2 = ''
+        else:
+            fila_inicial_m2 = self.__estado_inicial_subsistema
+        
+        mat1 = mat1.loc[[fila_inicial_m1]]
+        mat2 = mat2.loc[[fila_inicial_m2]]
         
         # Iterar sobre cada combinación de columnas para realizar el producto tensorial
         for col1, col2 in itertools.product(mat1.columns, mat2.columns):
@@ -341,10 +349,11 @@ class MatrizTPM:
                 j += 1
                 k += 1
 
+            ic(index_binario)
+            ic()
             # Calcular y asignar el producto
             # Calcular y asignar el producto en la fila correspondiente
-            resultado.at[self.__estado_inicial_subsistema, index_binario] = mat1.at[self.__estado_inicial_subsistema, col1] * mat2.at[self.__estado_inicial_subsistema, col2]
-          
+            resultado.at[self.__estado_inicial_subsistema, index_binario] = mat1.at[fila_inicial_m1, col1] * mat2.at[fila_inicial_m2, col2]
 
         # Llenar valores NaN con 0 para la matriz de salida
         resultado.fillna(0, inplace=True)
@@ -447,15 +456,10 @@ class MatrizTPM:
         #mandamos del diccionario self.__matriz_estado_nodo_dict el indice 0 y 2
         # lista = [(0, 0), (1, 1), (0, 1), (1, 3)]
         ic(self.get_dic_marginalizadas())
-        lista = [(0, 0), (1, 1)]
+        lista = [(0, 0), (1, 0)]
         
         #A|a normal
         normal, complemento = self.marginalizar_normal_complemento(lista)
         ic(normal)
         ic(complemento)
-
-        
-    
-    
-    
     
