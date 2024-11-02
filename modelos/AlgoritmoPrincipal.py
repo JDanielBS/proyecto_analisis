@@ -10,22 +10,22 @@ class AlgoritmoPrincipal:
         self.__matriz.obtener_estado_nodo()
         # ic(self.__matriz.get_diccionario())
         self.__matriz.matriz_subsistema()
-        self.__matriz.prueba_marginalizar()
-        #self.encontrar_particion_menor()
+        # ic(self.__matriz.get_dic_marginalizadas())
+        self.encontrar_particion_menor()
 
     def encontrar_particion_menor(self):
         conjuntoV = self.__matriz.pasar_cadena_a_lista()
         ic(conjuntoV)
         self.algoritmo_principal(conjuntoV)
 
-    # TODO: verificar cuando es vacío en presente o en futuro
     def algoritmo_principal(self, V):
         if(len(V) == 2):
             return
         v1 = V[0]
         ic(v1)
         W = [v1]
-
+        ic(W)
+        ic(V)
         for i in range(len(V) - 1):
             for j in list(set(V) - set(W)):
                 ic(j)
@@ -42,8 +42,7 @@ class AlgoritmoPrincipal:
                 else:
                     subsistema.append(v1)
                     subsistema.append(j)
-                ic(subsistema)
-                #(0, 0), (1, 0)
+
                 matriz_normal, matriz_complemento = self.__matriz.marginalizar_normal_complemento(subsistema)
-                print('Matriz normal', matriz_normal)
-                print('Matriz complemento', matriz_complemento)
+                resultado_tensorial = self.__matriz.producto_tensorial_matrices(matriz_normal[0], matriz_complemento[0], matriz_normal[1], matriz_complemento[1])
+                ic(resultado_tensorial)

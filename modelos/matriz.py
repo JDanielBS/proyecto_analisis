@@ -169,35 +169,41 @@ class MatrizTPM:
     ------------------------------------------------------------------------------------------------
     """
     def marginalizar_normal_complemento(self, lista_subsistema):
-        ic(lista_subsistema)
-        cadena_presente = self.pasar_lista_a_cadena(lista_subsistema, 0) #1
-        ic(cadena_presente)
-        cadena_futuro = self.pasar_lista_a_cadena(lista_subsistema, 1)   #100
-        ic(cadena_futuro)  
-                                                  
+        # sistema candidato = abd
+        # [(0,0), (1,0), (1,1), (1,3)]
+        # [(0,0), (1,1), (1,3)]
+        cadena_presente = self.pasar_lista_a_cadena(lista_subsistema, 0)
+        cadena_futuro = self.pasar_lista_a_cadena(lista_subsistema, 1)
 
         normal = self.marginalizar_bits(cadena_presente, cadena_futuro, '1')
-        
-
-        # for index in range(len(cadena_presente)):
-        #     index_presente = self.__listado_candidatos[index]
-        #     if index_presente not in self.__listado_valores_presentes:
-        #         cadena_presente = cadena_presente[:index] + '1' + cadena_presente[index+1:]
-        # for index in range(len(cadena_futuro)):
-        #     index_futuro = self.__listado_candidatos[index]
-        #     if index_futuro not in self.__listado_valores_futuros:
-        #         cadena_futuro = cadena_futuro[:index] + '1' + cadena_futuro[index+1:]
-
         complemento = self.marginalizar_bits(cadena_presente, cadena_futuro, '0')
 
-        return normal, complemento
+        indices_n = self.obtener_indices(cadena_futuro, '1')
+        indices_c = self.obtener_indices(cadena_futuro, '0')
+
+        i = 0
+        j = 0
+        while i < len(indices_n) and j < len(indices_c):
+            if indices_n[i] < indices_c[j]:
+                indices_n[i] = self.__listado_valores_futuros[indices_n[i]]
+                i += 1
+            else:
+                indices_c[i] = self.__listado_valores_futuros[indices_c[i]]
+                j += 1
+        while i < len(indices_n):
+            indices_n[i] = self.__listado_valores_futuros[indices_n[i]]
+            i += 1
+        while j < len(indices_c):
+            indices_c[j] = self.__listado_valores_futuros[indices_c[j]]
+            j += 1
+        
+        return (normal, indices_n), (complemento, indices_c)
 
     def marginalizar_bits(self, cadena_presente, cadena_futuro, bit):
         '''
         Marginaliza las filas y columnas de la matriz que no pertenecen al subsistema presente y futuro.
         Bit en 1 si se quiere hacer de manera normal, 0 si se quiere el complemento.
         '''
-        #  [(0, 0), (1, 1), (0, 1), (1, 3)] presente {}
         indices_futuros = self.obtener_indices(cadena_futuro, bit) #BC
         if len(indices_futuros) == 1:
             key = self.__listado_valores_futuros[indices_futuros[0]]
@@ -208,22 +214,13 @@ class MatrizTPM:
             temporal_marginalizada = self.marginalizar_filas(cadena_presente, temporal, '1')
             indices_temporal = []
             for i in indices_futuros:
-                matriz_futuro = self.__matriz_estado_nodo_marginalizadas[i].copy()
+                key = self.__listado_valores_futuros[i]
+                matriz_futuro = self.__matriz_estado_nodo_marginalizadas[key].copy()
                 matriz_marginalizada = self.marginalizar_filas(cadena_presente, matriz_futuro, bit)
                 temporal_marginalizada = self.producto_tensorial_matrices(temporal_marginalizada, matriz_marginalizada, indices_temporal, [i])
                 indices_temporal.append(i)
 
         return temporal_marginalizada
-
-    def prueba_marginalizar(self):
-        #mandamos del diccionario self.__matriz_estado_nodo_dict el indice 0 y 2
-        lista = [(0, 0), (1, 1), (0, 1), (1, 3)]
-        # BD|ab, 011|110
-        matriz = self.marginalizar(lista, '1')
-        print(matriz)
-
-        matriz = self.marginalizar(lista, '0')
-        print(matriz)
 
     def marginalizar_filas(self, subsistema_presente, matriz, bit):
         """
@@ -349,8 +346,6 @@ class MatrizTPM:
                 j += 1
                 k += 1
 
-            ic(index_binario)
-            ic()
             # Calcular y asignar el producto
             # Calcular y asignar el producto en la fila correspondiente
             resultado.at[self.__estado_inicial_subsistema, index_binario] = mat1.at[fila_inicial_m1, col1] * mat2.at[fila_inicial_m2, col2]
@@ -366,34 +361,28 @@ class MatrizTPM:
     ------------------------------------------------------------------------------------------------
     """
     def pasar_lista_a_cadena(self, lista, bit):
-        ic(lista)
-        ic(bit)
         """
         Convierte una lista de enteros en una cadena de bits.
         """
         # Inicializa la cadena con ceros y la convierte en una lista mutable
+        # [(0,0), (1,3)]
         if bit == 0:
-            longitud= len(self.__listado_valores_presentes)
-            ic(longitud)
+            longitud = len(self.__listado_valores_presentes)
         else:
-            longitud= len(self.__listado_valores_futuros)
-            ic(longitud)
+            longitud = len(self.__listado_valores_futuros)
 
-        cadena_dinamica = list("0" * longitud) #0
-        ic(cadena_dinamica)
+        cadena_dinamica = list("0" * longitud)
         
         # Recorre cada elemento de la lista
         for estado, posicion in lista:
             if estado == bit:
-                # Coloca un "1" en la posición indicada
-                cadena_dinamica[posicion] = "1"  #1
-                
-        if bit==0:
-            cadena_dinamica = "".join([cadena_dinamica[i] for i in self.__listado_valores_presentes])
+                key = self.__listado_valores_presentes[posicion] if bit == 0 else self.__listado_valores_futuros[posicion]
+                cadena_dinamica[key] = "1"
+        
+        if bit == 0:
+            cadena_dinamica = "".join([cadena_dinamica[i] for i in range(len(self.__listado_valores_presentes))])
         else:
-            cadena_dinamica = "".join([cadena_dinamica[i] for i in self.__listado_valores_futuros])
-            
-        ic(cadena_dinamica)
+            cadena_dinamica = "".join([cadena_dinamica[i] for i in range(len(self.__listado_valores_futuros))])
         
         # Convierte la lista de caracteres de vuelta a una cadena
         return cadena_dinamica
@@ -450,15 +439,14 @@ class MatrizTPM:
         print(resultado2, 'abc')
 
         print("Resultado final", resultado2)
-        
-        
+    
     def prueba_marginalizar(self):
         #mandamos del diccionario self.__matriz_estado_nodo_dict el indice 0 y 2
         # lista = [(0, 0), (1, 1), (0, 1), (1, 3)]
         ic(self.get_dic_marginalizadas())
         lista = [(0, 0), (1, 0)]
         
-        #A|a normal
+        # A|a normal
         normal, complemento = self.marginalizar_normal_complemento(lista)
         ic(normal)
         ic(complemento)
