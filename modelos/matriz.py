@@ -81,7 +81,6 @@ class MatrizTPM:
         self.__listado_valores_presentes = self.obtener_indices(
             self.__sistema.get_subsistema_presente(), "1")        # a partir de los indices de listado candidatos, se obtiene el estado inicial candidato
         self.__estado_inicial_subsistema = "".join([self.__sistema.get_estado_inicial()[i] for i in self.__listado_valores_presentes])
-        print(self.__estado_inicial_subsistema, 'estado_ini_subsistema')
         self.eliminar_filas_por_bits(self.__sistema.get_sistema_candidato(), self.__sistema.get_estado_inicial())
         self.eliminar_columnas_por_bits(self.__sistema.get_sistema_candidato())
         self.__matriz_candidata = self.__matriz.copy()
@@ -138,22 +137,14 @@ class MatrizTPM:
         diccionario_marginalizadas = {}
         for i in indices_f:
             matriz_futuro= self.__matriz_estado_nodo_dict[i]
-            ic(matriz_futuro)
             matriz_marginalizada= self.marginalizar_filas(self.__sistema.get_subsistema_presente(), matriz_futuro, '1')
             diccionario_marginalizadas[i] = matriz_marginalizada
-        ic(diccionario_marginalizadas)
         
         for i in range(1, len(indices_f)):
             resultado= self.producto_tensorial_matrices(diccionario_marginalizadas[indices_f[i-1]], diccionario_marginalizadas[indices_f[i]], [indices_f[i-1]],[indices_f[i]] )
-            ic(resultado)
-        print(diccionario_marginalizadas[indices_f[0]], 'matriz 1')
-        print(diccionario_marginalizadas[indices_f[1]], 'matriz 2')
-        ic([indices_f[0]])
-        ic([indices_f[1]])
         
         #guardar en un diccionario la multiplicacion de las matrices
         vector= resultado.values
-        ic(vector)
         
         self.__matriz_subsistema= vector
 
@@ -180,11 +171,9 @@ class MatrizTPM:
         Bit en 1 si se quiere hacer de manera normal, 0 si se quiere el complemento.
         '''
         #  [(0, 0), (1, 1), (0, 1), (1, 3)]
-        cadena_presente = self.pasar_lista_a_cadena(lista_subsistema, 0)
-        cadena_futuro = self.pasar_lista_a_cadena(lista_subsistema, 1)
+        cadena_presente = self.pasar_lista_a_cadena(lista_subsistema, 0) #100
+        cadena_futuro = self.pasar_lista_a_cadena(lista_subsistema, 1) #100 a bc   V=
         indices_futuros = self.obtener_indices(cadena_futuro, bit)
-        print(indices_futuros, 'indices futuros')
-        print(self.__listado_candidatos)
         if len(indices_futuros) == 1:
             key = self.__listado_candidatos[indices_futuros[0]]
             temporal = self.__matriz_estado_nodo_dict[key]
@@ -266,17 +255,17 @@ class MatrizTPM:
             if i in self.__listado_candidatos:
                 # Crear una cadena con un solo "1" en la posición correspondiente a la iteración actual
                 subsistema_futuro = cadena_dinamica[:i] + "1" + cadena_dinamica[i+1:]
-                print(subsistema_futuro, 'subsistema futuro')
                 
                 # Reiniciar matriz_estado_nodo a una copia de __matriz
                 self.__matriz_estado_nodo = self.__matriz_candidata.copy()
                 
                 # Marginalizar columnas con el subsistema futuro
                 matriz_estado = self.marginalizar_columnas(subsistema_futuro, self.__matriz_estado_nodo, '1')
-                print(matriz_estado, 'matriz estadooooooooos')
 
                 # Guardar la matriz de estado nodo en un diccionario con el índice como clave
                 self.__matriz_estado_nodo_dict[i] = matriz_estado
+    
+    # todo: hacer metodo que halle el complemento, basandose en el conjunto v (subsistema) guardar lo que se seleccionó como normal
     
     def producto_tensorial_matrices(self, mat1, mat2, indices1, indices2):
         # Crear etiquetas en formato little-endian para las combinaciones de columnas
@@ -292,9 +281,6 @@ class MatrizTPM:
         # Obtener la fila del estado inicial candidato
         mat1 = mat1.loc[[self.__estado_inicial_subsistema]]
         mat2 = mat2.loc[[self.__estado_inicial_subsistema]]
-
-        ic(mat1)
-        ic(mat2)
         
         # Iterar sobre cada combinación de columnas para realizar el producto tensorial
         for col1, col2 in itertools.product(mat1.columns, mat2.columns):
@@ -383,10 +369,7 @@ class MatrizTPM:
         cadena_presente = self.pasar_lista_a_cadena(lista, 0)
         cadena_futuro = self.pasar_lista_a_cadena(lista, 1)
         
-        print(cadena_presente, "cadena presente")
-        print(cadena_futuro, "cadena futuro")
-
-
+        
     def prueba_producto_tensorial(self):
         #mandamos del diccionario self.__matriz_estado_nodo_dict el indice 0 y 2
    
