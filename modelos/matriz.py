@@ -20,6 +20,9 @@ class MatrizTPM:
 
     def get_matriz(self):
         return print(self.__matriz)
+    
+    def get_matriz_subsistema(self):
+        return print(self.__matriz_subsistema)
       
     def get_listados(self):
         # Print detallado para depurar los valores de las listas
@@ -140,7 +143,6 @@ class MatrizTPM:
             diccionario_marginalizadas[i]= matriz_marginalizada
         ic(diccionario_marginalizadas)
         
-        temporal= diccionario_marginalizadas[indices_f[0]]   
         for i in range(1, len(indices_f)):
             resultado= self.producto_tensorial_matrices(diccionario_marginalizadas[indices_f[i-1]], diccionario_marginalizadas[indices_f[i]], [indices_f[i-1]],[indices_f[i]] )
             ic(resultado)
@@ -152,6 +154,8 @@ class MatrizTPM:
         #guardar en un diccionario la multiplicacion de las matrices
         vector= resultado.values
         ic(vector)
+        
+        self.__matriz_subsistema= vector
 
 
     """
