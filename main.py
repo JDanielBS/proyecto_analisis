@@ -1,7 +1,4 @@
-from modelos.matriz import MatrizTPM
-from modelos.sistema import Sistema
 from modelos.AlgoritmoPrincipal import AlgoritmoPrincipal
-
 
 algoritmo = AlgoritmoPrincipal()
 algoritmo.estrategia1()

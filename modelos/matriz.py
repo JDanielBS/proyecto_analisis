@@ -207,7 +207,7 @@ class MatrizTPM:
         indices_futuros = self.obtener_indices(cadena_futuro, bit) #BC
         if len(indices_futuros) == 1:
             key = self.__listado_valores_futuros[indices_futuros[0]]
-            temporal = self.__matriz_estado_nodo_marginalizadas[key] #0
+            temporal = self.__matriz_estado_nodo_marginalizadas[key].copy() #0
             temporal_marginalizada = self.marginalizar_filas(cadena_presente, temporal, bit)
         else:
             temporal = self.marginalizar_columnas('0'*len(self.__listado_candidatos), self.__matriz_candidata.copy(), '1') # 000, matriz de unos
@@ -228,7 +228,6 @@ class MatrizTPM:
         """
         # 1 para el normal, 0 para el complemento
         indices = self.obtener_indices(subsistema_presente, bit)
-
         nuevos_indices = []
 
         # Recorre cada fila de la matriz
@@ -373,11 +372,12 @@ class MatrizTPM:
 
         cadena_dinamica = list("0" * longitud)
         
-        # Recorre cada elemento de la lista
+        # Recorre cada elemento de la lista 
         for estado, posicion in lista:
             if estado == bit:
-                key = self.__listado_valores_presentes[posicion] if bit == 0 else self.__listado_valores_futuros[posicion]
-                cadena_dinamica[key] = "1"
+                # Coloca un "1" en la posición indicada
+                index = self.__listado_valores_presentes.index(posicion) if bit == 0 else self.__listado_valores_futuros.index(posicion)
+                cadena_dinamica[index] = "1"
         
         if bit == 0:
             cadena_dinamica = "".join([cadena_dinamica[i] for i in range(len(self.__listado_valores_presentes))])

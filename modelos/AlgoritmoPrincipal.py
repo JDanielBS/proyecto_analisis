@@ -1,9 +1,11 @@
 from modelos.matriz import MatrizTPM
 from icecream import ic
+from modelos.Emd import Emd
 
 class AlgoritmoPrincipal:
     def __init__(self):
         self.__matriz = MatrizTPM('archivos/matrizGuia.csv')
+        self.__emd = Emd()
 
     def estrategia1(self):
         self.__matriz.condiciones_de_background()
@@ -45,4 +47,5 @@ class AlgoritmoPrincipal:
 
                 matriz_normal, matriz_complemento = self.__matriz.marginalizar_normal_complemento(subsistema)
                 resultado_tensorial = self.__matriz.producto_tensorial_matrices(matriz_normal[0], matriz_complemento[0], matriz_normal[1], matriz_complemento[1])
-                ic(resultado_tensorial)
+                resultados_lista = resultado_tensorial.iloc[0].values.tolist()
+                ic(resultados_lista)
