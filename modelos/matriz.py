@@ -9,7 +9,7 @@ class MatrizTPM:
     def __init__(self, route):
         self.__matriz = pd.read_csv(route, sep=",", header=None)
         self.__matriz_candidata = None
-        self.__matriz_subsistema= None
+        self.__matriz_subsistema = None
         self.__matriz_estado_nodo_dict = {}
         self.__listado_candidatos = []
         self.__listado_valores_futuros = []
@@ -135,12 +135,12 @@ class MatrizTPM:
         indices_f= self.obtener_indices(self.__sistema.get_subsistema_futuro(), '1') #0 y 3 A D 
         indices_p= self.obtener_indices(self.__sistema.get_subsistema_presente(), '1') #0 y 1 ab
         # obtener el estado_nodo del diccionario de acuerdo a los indices_f
-        diccionario_marginalizadas= {}
+        diccionario_marginalizadas = {}
         for i in indices_f:
             matriz_futuro= self.__matriz_estado_nodo_dict[i]
             ic(matriz_futuro)
             matriz_marginalizada= self.marginalizar_filas(self.__sistema.get_subsistema_presente(), matriz_futuro, '1')
-            diccionario_marginalizadas[i]= matriz_marginalizada
+            diccionario_marginalizadas[i] = matriz_marginalizada
         ic(diccionario_marginalizadas)
         
         for i in range(1, len(indices_f)):
@@ -157,6 +157,17 @@ class MatrizTPM:
         
         self.__matriz_subsistema= vector
 
+    def obtener_vector_subsitema_teorico(self):
+        '''
+        Marginaliza las filas y columnas de la matriz que no pertenecen al subsistema presente y futuro.
+        Bit en 1 si se quiere hacer de manera normal, 0 si se quiere el complemento.
+        '''
+        subsistema_futuro = self.__sistema.get_subsistema_futuro()
+        subsistema_presente = self.__sistema.get_subsistema_presente()
+        temporal = self.marginalizar_columnas(subsistema_futuro, self.__matriz_candidata.copy(), '1')
+        matriz_temp = self.marginalizar_filas(subsistema_presente, temporal, '1')
+        matriz_temp = matriz_temp.loc[[self.__estado_inicial_subsistema]]
+        self.__matriz_subsistema = matriz_temp
 
     """
     ------------------------------------------------------------------------------------------------
@@ -277,10 +288,13 @@ class MatrizTPM:
 
         # Crear la matriz de resultado con las nuevas etiquetas de columnas
         resultado = pd.DataFrame(index=[self.__estado_inicial_subsistema], columns=etiquetas_little_endian)
-
+        
         # Obtener la fila del estado inicial candidato
         mat1 = mat1.loc[[self.__estado_inicial_subsistema]]
         mat2 = mat2.loc[[self.__estado_inicial_subsistema]]
+
+        ic(mat1)
+        ic(mat2)
         
         # Iterar sobre cada combinación de columnas para realizar el producto tensorial
         for col1, col2 in itertools.product(mat1.columns, mat2.columns):
@@ -362,20 +376,26 @@ class MatrizTPM:
         #mandamos del diccionario self.__matriz_estado_nodo_dict el indice 0 y 2
    
         matriz1 = self.__matriz_estado_nodo_dict[0]
-        matriz2 = self.__matriz_estado_nodo_dict[2]
+        matriz2 = self.__matriz_estado_nodo_dict[1]
         indices1 = [0]
-        indices2 = [2]
+        indices2 = [1]
         
-        indices3= [0, 2]
-        indices4= [1]
+        indices3= [0, 1]
+        indices4= [2]
         
-        matriz3 = self.__matriz_estado_nodo_dict[1]
+        matriz3 = self.__matriz_estado_nodo_dict[2]
         
+        matriz1 = self.marginalizar_filas(self.__sistema.get_subsistema_presente(), matriz1, '1')
+        matriz2 = self.marginalizar_filas(self.__sistema.get_subsistema_presente(), matriz2, '1')
+        matriz3 = self.marginalizar_filas(self.__sistema.get_subsistema_presente(), matriz3, '1')
+
         resultado = self.producto_tensorial_matrices(matriz1, matriz2, indices1, indices2)
-        print(resultado, 'ac')
+        print(resultado, 'ab')
         
         resultado2= self.producto_tensorial_matrices(matriz3, resultado, indices4, indices3)
-        print(resultado2, 'ac*b')
+        print(resultado2, 'abc')
+
+        print("Resultado final", resultado2)
         
     
     
