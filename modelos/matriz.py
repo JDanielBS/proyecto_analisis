@@ -166,19 +166,19 @@ class MatrizTPM:
     ------------------------------------------------------------------------------------------------
     """
     def marginalizar_normal_complemento(self, lista_subsistema):
-        cadena_presente = self.pasar_lista_a_cadena(lista_subsistema, 0)
-        cadena_futuro = self.pasar_lista_a_cadena(lista_subsistema, 1)
+        cadena_presente = self.pasar_lista_a_cadena(lista_subsistema, 0) #1
+        cadena_futuro = self.pasar_lista_a_cadena(lista_subsistema, 1)   #100                                            
 
         normal = self.marginalizar_bits(cadena_presente, cadena_futuro, '1')
 
-        for index in range(len(cadena_presente)):
-            index_presente = self.__listado_candidatos[index]
-            if index_presente not in self.__listado_valores_presentes:
-                cadena_presente = cadena_presente[:index] + '1' + cadena_presente[index+1:]
-        for index in range(len(cadena_futuro)):
-            index_futuro = self.__listado_candidatos[index]
-            if index_futuro not in self.__listado_valores_futuros:
-                cadena_futuro = cadena_futuro[:index] + '1' + cadena_futuro[index+1:]
+        # for index in range(len(cadena_presente)):
+        #     index_presente = self.__listado_candidatos[index]
+        #     if index_presente not in self.__listado_valores_presentes:
+        #         cadena_presente = cadena_presente[:index] + '1' + cadena_presente[index+1:]
+        # for index in range(len(cadena_futuro)):
+        #     index_futuro = self.__listado_candidatos[index]
+        #     if index_futuro not in self.__listado_valores_futuros:
+        #         cadena_futuro = cadena_futuro[:index] + '1' + cadena_futuro[index+1:]
 
         complemento = self.marginalizar_bits(cadena_presente, cadena_futuro, '0')
 
@@ -190,12 +190,21 @@ class MatrizTPM:
         Bit en 1 si se quiere hacer de manera normal, 0 si se quiere el complemento.
         '''
         #  [(0, 0), (1, 1), (0, 1), (1, 3)]
-        indices_futuros = self.obtener_indices(cadena_futuro, bit)
+        indices_futuros = self.obtener_indices(cadena_futuro, bit) #0
         if len(indices_futuros) == 1:
-            key = self.__listado_candidatos[indices_futuros[0]]
-            temporal = self.__matriz_estado_nodo_dict[key]
+            key = self.__listado_valores_futuros[indices_futuros[0]]
+            temporal = self.__matriz_estado_nodo_marginalizadas[key] #0
+            temporal_marginalizada= marginalizar_filas(cadena_presente, temporal, bit)
         else:
-            temporal = self.marginalizar_columnas(cadena_futuro, self.__matriz_candidata.copy(), bit)
+            temporal = self.marginalizar_columnas('0'*len(self._listado_valores_futuros), self.__matriz_candidata.copy(), '1') # 000, matriz de unos
+            temporal_marginalizada = self.marginalizar_filas(self.__sistema.get_subsistema_presente(), temporal, '1')
+            indices_temporal = []
+            for i in indices_f:
+                matriz_futuro = self.__matriz_estado_nodo_dict[i].copy()
+                matriz_marginalizada = self.marginalizar_filas(self.__sistema.get_subsistema_presente(), matriz_futuro, '1')
+                self.__matriz_estado_nodo_marginalizadas[i] = matriz_marginalizada
+                temporal_marginalizada = self.producto_tensorial_matrices(temporal_marginalizada, matriz_marginalizada, indices_temporal, [i])
+                indices_temporal.append(i)
 
         matriz_temp = self.marginalizar_filas(cadena_presente, temporal, bit)
         return matriz_temp
@@ -346,13 +355,18 @@ class MatrizTPM:
         Convierte una lista de enteros en una cadena de bits.
         """
         # Inicializa la cadena con ceros y la convierte en una lista mutable
-        cadena_dinamica = list("0" * len(self.__sistema.get_sistema_candidato()))
+        if bit == 0:
+            longitud= len(self.__listado_valores_presentes)
+        else:
+            longitud= len(self.__listado_valores_futuros)
+
+        cadena_dinamica = list("0" * longitud) #0
         
         # Recorre cada elemento de la lista
         for estado, posicion in lista:
             if estado == bit:
                 # Coloca un "1" en la posición indicada
-                cadena_dinamica[posicion] = "1"
+                cadena_dinamica[posicion] = "1"  #1
         
         cadena_dinamica = "".join([cadena_dinamica[i] for i in self.__listado_candidatos])
         
