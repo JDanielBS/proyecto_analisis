@@ -355,6 +355,21 @@ class MatrizTPM:
         
         # Convierte la lista de caracteres de vuelta a una cadena
         return cadena_dinamica
+    
+    def pasar_cadena_a_lista(self):
+        """
+        Convierte una cadena de bits a una lista.
+        """
+        indices_f = self.obtener_indices(self.__sistema.get_subsistema_futuro(), "1")
+        indices_p = self.obtener_indices(self.__sistema.get_subsistema_presente(), "1")
+        listado = []
+
+        for i in indices_p:
+            listado.append((0, i))
+        for i in indices_f:
+            listado.append((1, i))
+
+        return listado
 
     def prueba_lista(self):
         # Verificar que no ingrese variables que no estén en el sistema candidato
