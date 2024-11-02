@@ -10,6 +10,7 @@ class AlgoritmoPrincipal:
         self.__matriz.obtener_estado_nodo()
         # ic(self.__matriz.get_diccionario())
         self.__matriz.matriz_subsistema()
+        self.__matriz.prueba_marginalizar()
         #self.encontrar_particion_menor()
 
     def encontrar_particion_menor(self):

@@ -36,6 +36,9 @@ class MatrizTPM:
     
     def get_diccionario(self):
         return self.__matriz_estado_nodo_dict
+    
+    def get_dic_marginalizadas(self):
+        return self.__matriz_estado_nodo_marginalizadas
 
     """
     ------------------------------------------------------------------------------------------------
@@ -166,10 +169,15 @@ class MatrizTPM:
     ------------------------------------------------------------------------------------------------
     """
     def marginalizar_normal_complemento(self, lista_subsistema):
+        ic(lista_subsistema)
         cadena_presente = self.pasar_lista_a_cadena(lista_subsistema, 0) #1
-        cadena_futuro = self.pasar_lista_a_cadena(lista_subsistema, 1)   #100                                            
+        ic(cadena_presente)
+        cadena_futuro = self.pasar_lista_a_cadena(lista_subsistema, 1)   #100
+        ic(cadena_futuro)  
+                                                  
 
         normal = self.marginalizar_bits(cadena_presente, cadena_futuro, '1')
+        
 
         # for index in range(len(cadena_presente)):
         #     index_presente = self.__listado_candidatos[index]
@@ -189,35 +197,33 @@ class MatrizTPM:
         Marginaliza las filas y columnas de la matriz que no pertenecen al subsistema presente y futuro.
         Bit en 1 si se quiere hacer de manera normal, 0 si se quiere el complemento.
         '''
-        #  [(0, 0), (1, 1), (0, 1), (1, 3)]
-        indices_futuros = self.obtener_indices(cadena_futuro, bit) #0
+        #  [(0, 0), (1, 1), (0, 1), (1, 3)] presente {}
+        indices_futuros = self.obtener_indices(cadena_futuro, bit) #BC
         if len(indices_futuros) == 1:
             key = self.__listado_valores_futuros[indices_futuros[0]]
             temporal = self.__matriz_estado_nodo_marginalizadas[key] #0
-            temporal_marginalizada= marginalizar_filas(cadena_presente, temporal, bit)
+            temporal_marginalizada= self.marginalizar_filas(cadena_presente, temporal, bit)
         else:
-            temporal = self.marginalizar_columnas('0'*len(self._listado_valores_futuros), self.__matriz_candidata.copy(), '1') # 000, matriz de unos
-            temporal_marginalizada = self.marginalizar_filas(self.__sistema.get_subsistema_presente(), temporal, '1')
+            temporal = self.marginalizar_columnas('0'*len(self.__listado_candidatos), self.__matriz_candidata.copy(), '1') # 000, matriz de unos
+            temporal_marginalizada = self.marginalizar_filas(cadena_presente, temporal, '1')
             indices_temporal = []
-            for i in indices_f:
-                matriz_futuro = self.__matriz_estado_nodo_dict[i].copy()
-                matriz_marginalizada = self.marginalizar_filas(self.__sistema.get_subsistema_presente(), matriz_futuro, '1')
-                self.__matriz_estado_nodo_marginalizadas[i] = matriz_marginalizada
+            for i in indices_futuros:
+                matriz_futuro = self.__matriz_estado_nodo_marginalizadas[i].copy()
+                matriz_marginalizada= self.marginalizar_filas(cadena_presente, matriz_futuro, bit)
                 temporal_marginalizada = self.producto_tensorial_matrices(temporal_marginalizada, matriz_marginalizada, indices_temporal, [i])
                 indices_temporal.append(i)
 
-        matriz_temp = self.marginalizar_filas(cadena_presente, temporal, bit)
-        return matriz_temp
+        return temporal_marginalizada
 
-    # def prueba_marginalizar(self):
-    #     #mandamos del diccionario self.__matriz_estado_nodo_dict el indice 0 y 2
-    #     lista = [(0, 0), (1, 1), (0, 1), (1, 3)]
-    #     # BD|ab, 011|110
-    #     matriz = self.marginalizar(lista, '1')
-    #     print(matriz)
+    def prueba_marginalizar(self):
+        #mandamos del diccionario self.__matriz_estado_nodo_dict el indice 0 y 2
+        lista = [(0, 0), (1, 1), (0, 1), (1, 3)]
+        # BD|ab, 011|110
+        matriz = self.marginalizar(lista, '1')
+        print(matriz)
 
-    #     matriz = self.marginalizar(lista, '0')
-    #     print(matriz)
+        matriz = self.marginalizar(lista, '0')
+        print(matriz)
 
     def marginalizar_filas(self, subsistema_presente, matriz, bit):
         """
@@ -351,24 +357,34 @@ class MatrizTPM:
     ------------------------------------------------------------------------------------------------
     """
     def pasar_lista_a_cadena(self, lista, bit):
+        ic(lista)
+        ic(bit)
         """
         Convierte una lista de enteros en una cadena de bits.
         """
         # Inicializa la cadena con ceros y la convierte en una lista mutable
         if bit == 0:
             longitud= len(self.__listado_valores_presentes)
+            ic(longitud)
         else:
             longitud= len(self.__listado_valores_futuros)
+            ic(longitud)
 
         cadena_dinamica = list("0" * longitud) #0
+        ic(cadena_dinamica)
         
         # Recorre cada elemento de la lista
         for estado, posicion in lista:
             if estado == bit:
                 # Coloca un "1" en la posición indicada
                 cadena_dinamica[posicion] = "1"  #1
-        
-        cadena_dinamica = "".join([cadena_dinamica[i] for i in self.__listado_candidatos])
+                
+        if bit==0:
+            cadena_dinamica = "".join([cadena_dinamica[i] for i in self.__listado_valores_presentes])
+        else:
+            cadena_dinamica = "".join([cadena_dinamica[i] for i in self.__listado_valores_futuros])
+            
+        ic(cadena_dinamica)
         
         # Convierte la lista de caracteres de vuelta a una cadena
         return cadena_dinamica
@@ -425,6 +441,19 @@ class MatrizTPM:
         print(resultado2, 'abc')
 
         print("Resultado final", resultado2)
+        
+        
+    def prueba_marginalizar(self):
+        #mandamos del diccionario self.__matriz_estado_nodo_dict el indice 0 y 2
+        # lista = [(0, 0), (1, 1), (0, 1), (1, 3)]
+        ic(self.get_dic_marginalizadas())
+        lista = [(0, 0), (1, 1)]
+        
+        #A|a normal
+        normal, complemento = self.marginalizar_normal_complemento(lista)
+        ic(normal)
+        ic(complemento)
+
         
     
     
