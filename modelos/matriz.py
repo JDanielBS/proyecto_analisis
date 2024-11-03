@@ -21,7 +21,7 @@ class MatrizTPM:
         self.__estado_inicial_subsistema= None
         self.__estado_i_normal = ''
         self.__estado_i_complemento = ''
-        self.indexar_matriz() if route is not None else self.indexar_array()
+        self.indexar_matriz() if route is not None else self.__matriz.values
 
     def get_matriz(self):
         return print(self.__matriz)
@@ -205,10 +205,8 @@ class MatrizTPM:
         # [(0,0), (1,1), (1,3)]
         cadena_presente = self.pasar_lista_a_cadena(lista_subsistema, 0)
         cadena_futuro = self.pasar_lista_a_cadena(lista_subsistema, 1)
-        print("NORMAL")
-        normal = self.marginalizar_bits(cadena_presente, cadena_futuro, '1')
 
-        print("COMPLEMENTO")
+        normal = self.marginalizar_bits(cadena_presente, cadena_futuro, '1')
         complemento = self.marginalizar_bits(cadena_presente, cadena_futuro, '0')
 
         indices_n = self.obtener_indices(cadena_futuro, '1')

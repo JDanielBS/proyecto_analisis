@@ -31,8 +31,9 @@ class AlgoritmoPrincipal:
         W = [v1]
         ic(W)
         ic(V)
+        mejor_particion = []
         for i in range(len(V) - 1):
-            
+            mejor_iteracion = ()
             for j in list(set(V) - set(W)):
                 ic(j)
                 subsistema = []
@@ -61,7 +62,15 @@ class AlgoritmoPrincipal:
                 resultadoEMD_nu= self.__emd.calcularEMD(resultados_lista_nu, self.__matriz.get_matriz_subsistema())
 
                 resultado = resultadoEMD - resultadoEMD_nu
-                ic(resultado, 'resultado resta')
+                ic(resultado)
+
+                if mejor_iteracion == ():
+                    mejor_iteracion = (resultado, j)
+                elif resultado < mejor_iteracion[0]:
+                    mejor_iteracion = (resultado, j)
+            
+            W.append(mejor_iteracion[1])
+            ic(W)
 
     def add_elements_to_list(self, lista, element):
         if isinstance(element, list):

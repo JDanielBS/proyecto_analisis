@@ -8,43 +8,45 @@ from numpy.typing import NDArray
 from functools import reduce
 
 def main():
-    algoritmo = AlgoritmoPrincipal('archivos/matrizGuia.csv')
-    #algoritmo2 = AlgoritmoPrincipal('archivos\matriz_6_variables.csv')
-    #algoritmo2.estrategia1()
+    # algoritmo = AlgoritmoPrincipal('archivos/matrizGuia.csv')
+    # algoritmo2 = AlgoritmoPrincipal('archivos\matriz_6_variables.csv')
+    # algoritmo.estrategia1()
     excel = LectorExcel()
-    #print(excel.leer())
     matrices = [
         MatrizTPM(array=mat) for mat in excel.leer()
     ]
-    matrices_etiquetadas = [
-        mat.indexar_array() for mat in matrices
-    ]
-    matrix_completa = None
-    for histogramas in zip(*matrices_etiquetadas):
-        for row in zip(histogramas):
-            print(row)
+    tensor = excel.leer() # listado de np NDarray
+    for matrices in zip(*tensor):
+        histogramas = [((i,), m) for i, m in enumerate(matrices)]
+        # histogramas = [print(m) for i, m in enumerate(matrices)]
+        fila_completa = reduce(lambda x, y: bin_prod(x, y), histogramas)
+        print(fila_completa)
 
-def product(
-    arrays: list[tuple[tuple[int, ...], NDArray[np.float64]]], le: bool = True
-) -> tuple[tuple[int, ...], NDArray[np.float64]]:
-    # return reduce(lambda x, y: np.kron
-    return (
-        arrays[0]
-        if len(arrays) == 1
-        else reduce(
-            lambda x, y: bin_prod(x, y, le),
-            arrays,
-        )
-    )
+# def product(
+#     arrays: list[tuple[tuple[int, ...], NDArray[np.float64]]], le: bool = True
+# ) -> tuple[tuple[int, ...], NDArray[np.float64]]:
+#     # return reduce(lambda x, y: np.kron
+#     return (
+#         arrays[0]
+#         if len(arrays) == 1
+#         else reduce(
+#             lambda x, y: bin_prod(x, y, le),
+#             arrays,
+#         )
+#     )
 
 def bin_prod(
     idx_dist_u: tuple[tuple[int, ...], np.ndarray],
     idx_dist_v: tuple[tuple[int, ...], np.ndarray],
-    le: bool,
+    le: bool = True,
 ) -> tuple[tuple[int, ...], np.ndarray]:
     """Returns the binary product of two arrays."""
+    print(idx_dist_u)
+    print(idx_dist_v)
     u_idx, u = idx_dist_u
     v_idx, v = idx_dist_v
+    print(u)
+    print(v)
     u = u.flatten()
     v = v.flatten()
     d_len = len(u_idx) + len(v_idx)
