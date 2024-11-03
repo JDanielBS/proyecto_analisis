@@ -21,4 +21,5 @@ class LectorExcel:
             new_mat[:, 1] = column
             # Agregamos la nueva matriz a la lista de tensores
             self.__matrices.append(new_mat)
+        print(len(self.__matrices))
         return self.__matrices
