@@ -17,7 +17,7 @@ class MatrizTPM:
         self.__listado_candidatos = []
         self.__listado_valores_futuros = []
         self.__listado_valores_presentes = []
-        self.__sistema = Sistema("archivos/estructura.csv")
+        self.__sistema = Sistema('archivos/estructura_luz.csv')
         self.__estado_inicial_subsistema= None
         self.__estado_i_normal = ''
         self.__estado_i_complemento = ''

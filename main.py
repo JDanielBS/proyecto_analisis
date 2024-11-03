@@ -8,9 +8,10 @@ from numpy.typing import NDArray
 from functools import reduce
 
 def main():
-    algoritmo = AlgoritmoPrincipal('archivos/matrizGuia.csv')
+    # algoritmo = AlgoritmoPrincipal('archivos/matrizGuia.csv')
     # algoritmo2 = AlgoritmoPrincipal('archivos\matriz_6_variables.csv')
-    algoritmo.estrategia1()
+    algoritmo3 = AlgoritmoPrincipal('archivos/resultado.csv')
+    algoritmo3.estrategia1()
 
 if __name__ == '__main__':
     main()

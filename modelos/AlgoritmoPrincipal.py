@@ -8,6 +8,7 @@ class AlgoritmoPrincipal:
     def __init__(self, ruta):
         self.__matriz = MatrizTPM(ruta)
         self.__emd = MetricasDistancia()
+        self.__particiones_candidatas = []
 
     def estrategia1(self):
         self.__matriz.condiciones_de_background()
@@ -17,6 +18,7 @@ class AlgoritmoPrincipal:
         # ic(self.__matriz.get_dic_marginalizadas())
         self.__matriz.get_matriz_subsistema()
         self.encontrar_particion_menor()
+        ic(self.__particiones_candidatas)
 
     def encontrar_particion_menor(self):
         conjuntoV = self.__matriz.pasar_cadena_a_lista()
@@ -24,42 +26,27 @@ class AlgoritmoPrincipal:
         self.algoritmo_principal(conjuntoV)
 
     def algoritmo_principal(self, V):
-        if(len(V) == 2):
+        if(len(V) == 1):
             return
         v1 = V[0]
-        ic(v1)
         W = [v1]
-        ic(W)
-        ic(V)
         mejor_particion = []
         for i in range(len(V) - 1):
             mejor_iteracion = ()
             for j in list(set(V) - set(W)):
-                ic(j)
                 subsistema = []
                 u = []
-                self.add_elements_to_list(subsistema, v1)
-                self.add_elements_to_list(subsistema, j)
-                self.add_elements_to_list(u, j)
-                ic(subsistema)
-                ic(u)
+                subsistema.extend(v1 if isinstance(v1[0], tuple) else [v1])
+                subsistema.extend(j if isinstance(j[0], tuple) else [j])
+                u.extend(j if isinstance(j[0], tuple) else [j])
 
                 print("SE HACE LA V1 U U")
                 ic(subsistema)
-                matriz_normal, matriz_complemento = self.__matriz.marginalizar_normal_complemento(subsistema)
-                est_n, est_c = self.__matriz.get_estado_inicial_n_c()
-                self.__matriz.limpiar_estados_inicialies()
-                resultado_tensorial = self.__matriz.producto_tensorial_matrices(matriz_normal[0], matriz_complemento[0], matriz_normal[1], matriz_complemento[1], est_n, est_c)
-                resultados_lista = np.array(resultado_tensorial.iloc[0].values.tolist())
-                resultadoEMD= self.__emd.emd_pyphi(resultados_lista, self.__matriz.get_matriz_subsistema())
+                resultadoEMD = self.realizar_emd(subsistema)
 
                 print("SE HACE EL U")
-                matriz_nu, matriz_complemento_nu = self.__matriz.marginalizar_normal_complemento(u)
-                est_n, est_c = self.__matriz.get_estado_inicial_n_c()
-                self.__matriz.limpiar_estados_inicialies()
-                resultado_tensorial_nu = self.__matriz.producto_tensorial_matrices(matriz_nu[0], matriz_complemento_nu[0], matriz_nu[1], matriz_complemento_nu[1], est_n, est_c)
-                resultados_lista_nu = np.array(resultado_tensorial_nu.iloc[0].values.tolist())
-                resultadoEMD_nu= self.__emd.emd_pyphi(resultados_lista_nu, self.__matriz.get_matriz_subsistema())
+                ic(u)
+                resultadoEMD_nu= self.realizar_emd(u)
 
                 resultado = resultadoEMD - resultadoEMD_nu
                 ic(resultado)
@@ -68,27 +55,36 @@ class AlgoritmoPrincipal:
                     mejor_iteracion = (resultado, j)
             
             W.append(mejor_iteracion[1])
-            ic(W)
         
-        # Al finalizar la primera iteración del ciclo externo, tenemos la secuencia completa en W
-        ic(W)
-
         # Tomar los dos últimos elementos de W como el par candidato
         if len(W) >= 2:
-            par_candidato = [W[-2], W[-1]]
-            ic(par_candidato, 'Par candidato (v₃, v₄)')
-            
-        # construir el nuevo V a b A B V= [(0, 0), (0, 1), ((1, 0), (1, 1))]
-      
-        
-        
+            self.__particiones_candidatas.append(W[-1])
+            par_candidato = (W[-2], W[-1])
+            # Quitar al arreglo v todos los elementos del par candidato
+            V = list(set(V) - set(par_candidato))
+            par_candidato_final = self.combinar_tuplas(par_candidato[0], par_candidato[1])
+            V.append(par_candidato_final)
 
-        # Continuar con la recursión usando la nueva configuración basada en el par candidato
-        # En este punto podrías dividir los conjuntos y continuar recursivamente según la lógica de tu algoritmo.
+        self.algoritmo_principal(V)
+    
+    def realizar_emd(self, lista):
+        matriz_normal, matriz_complemento = self.__matriz.marginalizar_normal_complemento(lista)
+        est_n, est_c = self.__matriz.get_estado_inicial_n_c()
+        self.__matriz.limpiar_estados_inicialies()
+        resultado_tensorial = self.__matriz.producto_tensorial_matrices(matriz_normal[0], matriz_complemento[0], matriz_normal[1], matriz_complemento[1], est_n, est_c)
+        resultados_lista = np.array(resultado_tensorial.iloc[0].values.tolist())
+        return self.__emd.emd_pyphi(resultados_lista, self.__matriz.get_matriz_subsistema())
 
-    def add_elements_to_list(self, lista, element):
-        if isinstance(element, list):
-            lista.extend(element)
-        else:
-            lista.append(element)
-        return lista
+    def combinar_tuplas(self, t1, t2):
+        # Verificar si t1 y t2 son tuplas de tuplas (tupla con otros elementos tipo tuple)
+        es_tupla_de_tuplas_1 = all(isinstance(elem, tuple) for elem in t1)
+        es_tupla_de_tuplas_2 = all(isinstance(elem, tuple) for elem in t2)
+
+        # Agrupar `t1` y `t2` en una sola tupla de tuplas según su estructura
+        if not es_tupla_de_tuplas_1:
+            t1 = (t1,)  # Agrupa t1 en una sola tupla si no es una tupla de tuplas
+        if not es_tupla_de_tuplas_2:
+            t2 = (t2,)  # Agrupa t2 en una sola tupla si no es una tupla de tuplas
+
+        # Combinar ambos resultados en una sola tupla
+        return t1 + t2
