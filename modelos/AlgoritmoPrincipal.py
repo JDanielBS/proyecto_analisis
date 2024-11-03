@@ -13,12 +13,11 @@ class AlgoritmoPrincipal:
     def estrategia1(self):
         self.__matriz.condiciones_de_background()
         self.__matriz.obtener_estado_nodo()
-        # ic(self.__matriz.get_diccionario())
         self.__matriz.matriz_subsistema()
-        # ic(self.__matriz.get_dic_marginalizadas())
         self.__matriz.get_matriz_subsistema()
         self.encontrar_particion_menor()
         ic(self.__particiones_candidatas)
+        ic(self.comparar_particiones())
 
     def encontrar_particion_menor(self):
         conjuntoV = self.__matriz.pasar_cadena_a_lista()
@@ -30,7 +29,6 @@ class AlgoritmoPrincipal:
             return
         v1 = V[0]
         W = [v1]
-        mejor_particion = []
         for i in range(len(V) - 1):
             mejor_iteracion = ()
             for j in list(set(V) - set(W)):
@@ -58,7 +56,7 @@ class AlgoritmoPrincipal:
         
         # Tomar los dos últimos elementos de W como el par candidato
         if len(W) >= 2:
-            self.__particiones_candidatas.append(W[-1])
+            self.__particiones_candidatas.append((W[-1], W[:-1]))
             par_candidato = (W[-2], W[-1])
             # Quitar al arreglo v todos los elementos del par candidato
             V = list(set(V) - set(par_candidato))
@@ -88,3 +86,20 @@ class AlgoritmoPrincipal:
 
         # Combinar ambos resultados en una sola tupla
         return t1 + t2
+
+    def comparar_particiones(self):
+        particion_nueva = []
+        particion = self.__particiones_candidatas[0]
+        particion_nueva.extend(particion[0] if isinstance(particion[0][0], tuple) else [particion[0]])
+        emd_inicial = self.realizar_emd(particion_nueva)
+        particion_optima = (emd_inicial, particion)
+        for i in range(1, len(self.__particiones_candidatas)):
+            particion_nueva = []
+            p = self.__particiones_candidatas[i]
+            particion_nueva.extend(p[0] if isinstance(p[0][0], tuple) else [p[0]])
+            emd_resultado = self.realizar_emd(particion_nueva)
+            if emd_resultado < particion_optima[0]:
+                particion_optima = (emd_resultado, p)
+
+        return particion_optima
+            
