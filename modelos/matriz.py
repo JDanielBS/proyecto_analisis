@@ -7,8 +7,8 @@ from modelos.sistema import Sistema
 
 
 class MatrizTPM:
-    def __init__(self, route):
-        self.__matriz = pd.read_csv(route, sep=",", header=None)
+    def __init__(self, route = None, array = None):
+        self.__matriz = pd.DataFrame(array) if route is None else pd.read_csv(route, sep=",", header=None)
         self.__matriz_candidata = None
         self.__matriz_subsistema = None
         self.__matriz_no_futuro = None
@@ -21,7 +21,7 @@ class MatrizTPM:
         self.__estado_inicial_subsistema= None
         self.__estado_i_normal = ''
         self.__estado_i_complemento = ''
-        self.indexar_matriz()
+        self.indexar_matriz() if route is not None else self.indexar_array()
 
     def get_matriz(self):
         return print(self.__matriz)
@@ -76,6 +76,23 @@ class MatrizTPM:
         """
         for state in range(num_etiquetas):
             yield bin(state)[2:].zfill(n)[::-1]
+    
+    def indexar_array(self):
+        """
+        Indexa las filas y columnas de la matriz con etiquetas en formato little-endian
+        """
+        filas = self.__matriz.shape[0]
+        columnas = self.__matriz.shape[1]
+
+        num_bits_filas = math.ceil(math.log2(filas))
+        num_bits_col = math.ceil(math.log2(columnas))
+
+        labels_filas = list(self.lil_endian_int(num_bits_filas, filas))
+        labels_columnas = list(self.lil_endian_int(num_bits_col, columnas))
+
+        self.__matriz.columns = labels_columnas
+        self.__matriz.index = labels_filas
+        return self.__matriz
 
     """
     ------------------------------------------------------------------------------------------------
@@ -415,6 +432,9 @@ class MatrizTPM:
         # Convierte la lista de caracteres de vuelta a una cadena
         return cadena_dinamica
     
+    def producto_tensorial_chevre(self, histograma1, histograma2):
+        ...
+
     def pasar_cadena_a_lista(self):
         """
         Convierte una cadena de bits a una lista.
