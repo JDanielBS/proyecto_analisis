@@ -64,21 +64,24 @@ class AlgoritmoPrincipal:
                 resultado = resultadoEMD - resultadoEMD_nu
                 ic(resultado)
 
-                if mejor_iteracion == ():
-                    mejor_iteracion = (resultado, j)
-                elif resultado < mejor_iteracion[0]:
+                if mejor_iteracion == () or resultado < mejor_iteracion[0]:
                     mejor_iteracion = (resultado, j)
             
             W.append(mejor_iteracion[1])
             ic(W)
         
         # Al finalizar la primera iteración del ciclo externo, tenemos la secuencia completa en W
-        ic(W, 'Secuencia completa al final de la primera iteración')
+        ic(W)
 
         # Tomar los dos últimos elementos de W como el par candidato
         if len(W) >= 2:
-            par_candidato = (W[-2], W[-1])
+            par_candidato = [W[-2], W[-1]]
             ic(par_candidato, 'Par candidato (v₃, v₄)')
+            
+        # construir el nuevo V a b A B V= [(0, 0), (0, 1), ((1, 0), (1, 1))]
+      
+        
+        
 
         # Continuar con la recursión usando la nueva configuración basada en el par candidato
         # En este punto podrías dividir los conjuntos y continuar recursivamente según la lógica de tu algoritmo.
