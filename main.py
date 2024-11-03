@@ -12,15 +12,23 @@ def main():
     # algoritmo2 = AlgoritmoPrincipal('archivos\matriz_6_variables.csv')
     # algoritmo.estrategia1()
     excel = LectorExcel()
-    matrices = [
-        MatrizTPM(array=mat) for mat in excel.leer()
-    ]
-    tensor = excel.leer() # listado de np NDarray
-    for matrices in zip(*tensor):
-        histogramas = [((i,), m) for i, m in enumerate(matrices)]
-        # histogramas = [print(m) for i, m in enumerate(matrices)]
-        fila_completa = reduce(lambda x, y: bin_prod(x, y), histogramas)
-        print(fila_completa)
+    tensor = excel.leer() # listado de np NDarray 
+    tensor_invertido = [np.array(m) for m in reversed(tensor)]
+
+    # Aplicar el producto tensorial en el orden inverso
+    resultados = []
+    for filas in zip(*tensor_invertido):  # Itera fila a fila de cada matriz en el tensor invertido
+        # Multiplica los vectores en el orden inverso (de último a primero)
+        print(filas)
+        producto = reduce(lambda x, y: np.kron(x, y), filas)  # `np.kron` es el producto tensorial
+        resultados.append(producto)
+
+    # Convertimos la lista `resultados` a un arreglo numpy con la forma final
+    resultado_matriz = np.array(resultados) 
+    print(resultado_matriz)
+    # exportar a csv
+    pd.DataFrame(resultado_matriz).to_csv('resultado.csv', index=False, header=False)
+
 
 # def product(
 #     arrays: list[tuple[tuple[int, ...], NDArray[np.float64]]], le: bool = True
