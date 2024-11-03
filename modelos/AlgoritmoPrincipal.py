@@ -35,22 +35,34 @@ class AlgoritmoPrincipal:
             for j in list(set(V) - set(W)):
                 ic(j)
                 subsistema = []
+                u = []
                 if isinstance(v1, list) and isinstance(j, list):
                     subsistema.extend(v1)
                     subsistema.extend(j)
-                elif isinstance(v1, list):
+                    u.extend(j)
+                elif isinstance(v1, list) and not isinstance(j, list):
                     subsistema.extend(v1)
                     subsistema.append(j)
-                elif isinstance(j, list):
+                    u.append(j)
+                elif isinstance(j, list) and not isinstance(v1, list):
                     subsistema.append(v1)
                     subsistema.extend(j)
+                    u.extend(j)
                 else:
                     subsistema.append(v1)
                     subsistema.append(j)
+                    u.append(j)
 
                 matriz_normal, matriz_complemento = self.__matriz.marginalizar_normal_complemento(subsistema)
                 resultado_tensorial = self.__matriz.producto_tensorial_matrices(matriz_normal[0], matriz_complemento[0], matriz_normal[1], matriz_complemento[1])
                 resultados_lista = np.array(resultado_tensorial.iloc[0].values.tolist())
-               
                 resultadoEMD= self.__emd.calcularEMD(resultados_lista, self.__matriz.get_matriz_subsistema())
                 ic(resultadoEMD)
+
+                # 
+                matriz_nu, matriz_complemento_nu = self.__matriz.marginalizar_normal_complemento(u)
+                resultado_tensorial_nu = self.__matriz.producto_tensorial_matrices(matriz_nu[0], matriz_complemento_nu[0], matriz_nu[1], matriz_complemento_nu[1])
+                resultados_lista_nu = np.array(resultado_tensorial_nu.iloc[0].values.tolist())
+                resultadoEMD_nu= self.__emd.calcularEMD(resultados_lista_nu, self.__matriz.get_matriz_subsistema())
+                ic(resultadoEMD_nu)
+

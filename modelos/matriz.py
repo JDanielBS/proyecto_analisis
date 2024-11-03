@@ -206,6 +206,8 @@ class MatrizTPM:
         Bit en 1 si se quiere hacer de manera normal, 0 si se quiere el complemento.
         '''
         indices_futuros = self.obtener_indices(cadena_futuro, bit) #BC
+        self.generar_estado_inicial_subsistema(cadena_presente)
+        ic(self.__estado_inicial_subsistema)
         if len(indices_futuros) == 1:
             key = self.__listado_valores_futuros[indices_futuros[0]]
             temporal = self.__matriz_estado_nodo_marginalizadas[key].copy() #0
@@ -222,6 +224,13 @@ class MatrizTPM:
                 indices_temporal.append(i)
 
         return temporal_marginalizada
+    
+    def generar_estado_inicial_subsistema(self, subsistema_presente):
+        self.__estado_inicial_subsistema = ''
+        for index, content in enumerate(subsistema_presente): # 1
+            if content == '1':
+                index_estado_i = self.__listado_valores_presentes[index]
+                self.__estado_inicial_subsistema += self.__sistema.get_estado_inicial()[index_estado_i]
 
     def marginalizar_filas(self, subsistema_presente, matriz, bit):
         """
@@ -316,6 +325,10 @@ class MatrizTPM:
         else:
             fila_inicial_m2 = self.__estado_inicial_subsistema
         
+        ic(fila_inicial_m1)
+        ic(fila_inicial_m2)
+        ic(mat1)
+        ic(mat2)
         mat1 = mat1.loc[[fila_inicial_m1]]
         mat2 = mat2.loc[[fila_inicial_m2]]
         
