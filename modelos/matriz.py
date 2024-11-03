@@ -11,6 +11,7 @@ class MatrizTPM:
         self.__matriz = pd.read_csv(route, sep=",", header=None)
         self.__matriz_candidata = None
         self.__matriz_subsistema = None
+        self.__matriz_no_futuro = None
         self.__matriz_estado_nodo_dict = {}
         self.__matriz_estado_nodo_marginalizadas = {}
         self.__listado_candidatos = []
@@ -18,6 +19,8 @@ class MatrizTPM:
         self.__listado_valores_presentes = []
         self.__sistema = Sistema("archivos/estructura.csv")
         self.__estado_inicial_subsistema= None
+        self.__estado_i_normal = ''
+        self.__estado_i_complemento = ''
         self.indexar_matriz()
 
     def get_matriz(self):
@@ -40,6 +43,9 @@ class MatrizTPM:
     
     def get_dic_marginalizadas(self):
         return self.__matriz_estado_nodo_marginalizadas
+    
+    def get_estado_inicial_n_c(self):
+        return self.__estado_i_normal, self.__estado_i_complemento
 
     """
     ------------------------------------------------------------------------------------------------
@@ -90,6 +96,13 @@ class MatrizTPM:
         self.eliminar_columnas_por_bits(self.__sistema.get_sistema_candidato())
         self.__matriz_candidata = self.__matriz.copy()
 
+        temporal = self.marginalizar_columnas('0'*len(self.__listado_candidatos), self.__matriz_candidata.copy(), '1')
+        sub_presente = ''
+        for index, content in enumerate(self.__sistema.get_subsistema_presente()):
+            if index in self.__listado_candidatos:
+                sub_presente += content
+        self.__matriz_no_futuro = self.marginalizar_filas(sub_presente, temporal, '1')
+
     def eliminar_filas_por_bits(self, sistema_candidato, estado_inicial):
         """
         Elimina las filas cuyos índices tengan un bit específico en la posición indicada.
@@ -137,20 +150,20 @@ class MatrizTPM:
     def matriz_subsistema(self):
         # [(0,0), (1,0), (1,1), (1,2)]
         # leer el subsistema presente y futuro
-        indices_f= self.obtener_indices(self.__sistema.get_subsistema_futuro(), '1') # 0, 1, 2
+        indices_f = self.obtener_indices(self.__sistema.get_subsistema_futuro(), '1') # 0, 1, 2
         # obtener el estado_nodo del diccionario de acuerdo a los indices_f
 
-        temporal = self.marginalizar_columnas('0'*len(self.__listado_candidatos), self.__matriz_candidata.copy(), '1') # 000, matriz de unos
-        temporal_marginalizada = self.marginalizar_filas(self.__sistema.get_subsistema_presente(), temporal, '1')
+        temporal = self.__matriz_no_futuro.copy()
+        sub_presente = "".join([self.__sistema.get_subsistema_presente()[i] for i in self.__listado_candidatos])
         indices_temporal = []
         for i in indices_f:
             matriz_futuro = self.__matriz_estado_nodo_dict[i].copy()
-            matriz_marginalizada = self.marginalizar_filas(self.__sistema.get_subsistema_presente(), matriz_futuro, '1')
+            matriz_marginalizada = self.marginalizar_filas(sub_presente, matriz_futuro, '1')
             self.__matriz_estado_nodo_marginalizadas[i] = matriz_marginalizada
-            temporal_marginalizada = self.producto_tensorial_matrices(temporal_marginalizada, matriz_marginalizada, indices_temporal, [i])
+            temporal = self.producto_tensorial_matrices(temporal, matriz_marginalizada, indices_temporal, [i], self.__estado_inicial_subsistema, self.__estado_inicial_subsistema)
             indices_temporal.append(i)
             
-        self.__matriz_subsistema = np.array(temporal_marginalizada.iloc[0].values.tolist())
+        self.__matriz_subsistema = np.array(temporal.iloc[0].values.tolist())
 
     # def obtener_vector_subsitema_teorico(self):
     #     '''
@@ -175,8 +188,10 @@ class MatrizTPM:
         # [(0,0), (1,1), (1,3)]
         cadena_presente = self.pasar_lista_a_cadena(lista_subsistema, 0)
         cadena_futuro = self.pasar_lista_a_cadena(lista_subsistema, 1)
-
+        print("NORMAL")
         normal = self.marginalizar_bits(cadena_presente, cadena_futuro, '1')
+
+        print("COMPLEMENTO")
         complemento = self.marginalizar_bits(cadena_presente, cadena_futuro, '0')
 
         indices_n = self.obtener_indices(cadena_futuro, '1')
@@ -205,32 +220,39 @@ class MatrizTPM:
         Marginaliza las filas y columnas de la matriz que no pertenecen al subsistema presente y futuro.
         Bit en 1 si se quiere hacer de manera normal, 0 si se quiere el complemento.
         '''
-        indices_futuros = self.obtener_indices(cadena_futuro, bit) #BC
-        self.generar_estado_inicial_subsistema(cadena_presente)
-        ic(self.__estado_inicial_subsistema)
+        indices_futuros = self.obtener_indices(cadena_futuro, bit)
+        estado_inicial = self.generar_estado_inicial_subsistema(cadena_presente, bit)
         if len(indices_futuros) == 1:
             key = self.__listado_valores_futuros[indices_futuros[0]]
-            temporal = self.__matriz_estado_nodo_marginalizadas[key].copy() #0
+            temporal = self.__matriz_estado_nodo_marginalizadas[key].copy()
             temporal_marginalizada = self.marginalizar_filas(cadena_presente, temporal, bit)
         else:
-            temporal = self.marginalizar_columnas('0'*len(self.__listado_candidatos), self.__matriz_candidata.copy(), '1') # 000, matriz de unos
-            temporal_marginalizada = self.marginalizar_filas(cadena_presente, temporal, '1')
+            temporal = self.__matriz_no_futuro.copy()
+            temporal_marginalizada = self.marginalizar_filas(cadena_presente, temporal, bit)
             indices_temporal = []
             for i in indices_futuros:
                 key = self.__listado_valores_futuros[i]
                 matriz_futuro = self.__matriz_estado_nodo_marginalizadas[key].copy()
                 matriz_marginalizada = self.marginalizar_filas(cadena_presente, matriz_futuro, bit)
-                temporal_marginalizada = self.producto_tensorial_matrices(temporal_marginalizada, matriz_marginalizada, indices_temporal, [i])
-                indices_temporal.append(i)
+                temporal_marginalizada = self.producto_tensorial_matrices(temporal_marginalizada, matriz_marginalizada, indices_temporal, [key], estado_inicial, estado_inicial)
+                indices_temporal.append(key)
 
         return temporal_marginalizada
     
-    def generar_estado_inicial_subsistema(self, subsistema_presente):
-        self.__estado_inicial_subsistema = ''
-        for index, content in enumerate(subsistema_presente): # 1
-            if content == '1':
+    def generar_estado_inicial_subsistema(self, subsistema_presente, bit):
+        for index, content in enumerate(subsistema_presente):
+            if content == bit:
                 index_estado_i = self.__listado_valores_presentes[index]
-                self.__estado_inicial_subsistema += self.__sistema.get_estado_inicial()[index_estado_i]
+                if bit == '1':
+                    self.__estado_i_normal += self.__sistema.get_estado_inicial()[index_estado_i]
+                else:
+                    self.__estado_i_complemento += self.__sistema.get_estado_inicial()[index_estado_i]
+        if bit == '1':
+            self.__estado_inicial_subsistema = self.__estado_i_normal
+            return self.__estado_i_normal
+        else:
+            self.__estado_inicial_subsistema = self.__estado_i_complemento
+            return self.__estado_i_complemento
 
     def marginalizar_filas(self, subsistema_presente, matriz, bit):
         """
@@ -239,17 +261,14 @@ class MatrizTPM:
         # 1 para el normal, 0 para el complemento
         indices = self.obtener_indices(subsistema_presente, bit)
         nuevos_indices = []
-
-        # Recorre cada fila de la matriz
-        if(indices != []):
-            nuevos_indices = [
-                "".join([fila[i] for i in range(len(fila)) if i in indices]) or fila[-1]
-                for fila in matriz.index
-            ]
-        else:
-            for _ in range(len(matriz.index)):
-                nuevos_indices.append('')
         
+        # Recorre cada fila de la matriz
+
+        nuevos_indices = [
+            "".join([fila[i] for i in range(len(fila)) if i in indices])
+            for fila in matriz.index
+        ]
+
         matriz.index = nuevos_indices
 
         # Transponemos la matriz para que las columnas se conviertan en filas, agrupamos, y luego volvemos a transponer
@@ -304,7 +323,7 @@ class MatrizTPM:
                 self.__matriz_estado_nodo_dict[i] = matriz_estado
     
     
-    def producto_tensorial_matrices(self, mat1, mat2, indices1, indices2):
+    def producto_tensorial_matrices(self, mat1, mat2, indices1, indices2, est1, est2):
         # Crear etiquetas en formato little-endian para las combinaciones de columnas
         n_cols_resultado = 2 ** (len(indices1) + len(indices2))
         etiquetas_little_endian = [
@@ -319,16 +338,12 @@ class MatrizTPM:
         if len(mat1) == 1 and mat1.index[0] == '':
             fila_inicial_m1 = ''
         else:
-            fila_inicial_m1 = self.__estado_inicial_subsistema
+            fila_inicial_m1 = est1
         if len(mat2) == 1 and mat2.index[0] == '':
             fila_inicial_m2 = ''
         else:
-            fila_inicial_m2 = self.__estado_inicial_subsistema
-        
-        ic(fila_inicial_m1)
-        ic(fila_inicial_m2)
-        ic(mat1)
-        ic(mat2)
+            fila_inicial_m2 = est2
+
         mat1 = mat1.loc[[fila_inicial_m1]]
         mat2 = mat2.loc[[fila_inicial_m2]]
         
@@ -365,7 +380,6 @@ class MatrizTPM:
 
         # Llenar valores NaN con 0 para la matriz de salida
         resultado.fillna(0, inplace=True)
-        
         return resultado
 
     """
@@ -415,6 +429,11 @@ class MatrizTPM:
             listado.append((1, i))
 
         return listado
+    
+    def limpiar_estados_inicialies(self):
+        self.__estado_i_normal = ''
+        self.__estado_i_complemento = ''
+        self.__estado_inicial_subsistema = ''
 
     def prueba_lista(self):
         # Verificar que no ingrese variables que no estén en el sistema candidato

@@ -5,8 +5,8 @@ import numpy as np
 
 
 class AlgoritmoPrincipal:
-    def __init__(self):
-        self.__matriz = MatrizTPM('archivos/matrizGuia.csv')
+    def __init__(self, ruta):
+        self.__matriz = MatrizTPM(ruta)
         self.__emd = Emd()
 
     def estrategia1(self):
@@ -32,37 +32,40 @@ class AlgoritmoPrincipal:
         ic(W)
         ic(V)
         for i in range(len(V) - 1):
+            
             for j in list(set(V) - set(W)):
                 ic(j)
                 subsistema = []
                 u = []
-                if isinstance(v1, list) and isinstance(j, list):
-                    subsistema.extend(v1)
-                    subsistema.extend(j)
-                    u.extend(j)
-                elif isinstance(v1, list) and not isinstance(j, list):
-                    subsistema.extend(v1)
-                    subsistema.append(j)
-                    u.append(j)
-                elif isinstance(j, list) and not isinstance(v1, list):
-                    subsistema.append(v1)
-                    subsistema.extend(j)
-                    u.extend(j)
-                else:
-                    subsistema.append(v1)
-                    subsistema.append(j)
-                    u.append(j)
+                self.add_elements_to_list(subsistema, v1)
+                self.add_elements_to_list(subsistema, j)
+                self.add_elements_to_list(u, j)
+                ic(subsistema)
+                ic(u)
 
+                print("SE HACE LA V1 U U")
+                ic(subsistema)
                 matriz_normal, matriz_complemento = self.__matriz.marginalizar_normal_complemento(subsistema)
-                resultado_tensorial = self.__matriz.producto_tensorial_matrices(matriz_normal[0], matriz_complemento[0], matriz_normal[1], matriz_complemento[1])
+                est_n, est_c = self.__matriz.get_estado_inicial_n_c()
+                self.__matriz.limpiar_estados_inicialies()
+                resultado_tensorial = self.__matriz.producto_tensorial_matrices(matriz_normal[0], matriz_complemento[0], matriz_normal[1], matriz_complemento[1], est_n, est_c)
                 resultados_lista = np.array(resultado_tensorial.iloc[0].values.tolist())
                 resultadoEMD= self.__emd.calcularEMD(resultados_lista, self.__matriz.get_matriz_subsistema())
-                ic(resultadoEMD)
 
-                # 
+                print("SE HACE EL U")
                 matriz_nu, matriz_complemento_nu = self.__matriz.marginalizar_normal_complemento(u)
-                resultado_tensorial_nu = self.__matriz.producto_tensorial_matrices(matriz_nu[0], matriz_complemento_nu[0], matriz_nu[1], matriz_complemento_nu[1])
+                est_n, est_c = self.__matriz.get_estado_inicial_n_c()
+                self.__matriz.limpiar_estados_inicialies()
+                resultado_tensorial_nu = self.__matriz.producto_tensorial_matrices(matriz_nu[0], matriz_complemento_nu[0], matriz_nu[1], matriz_complemento_nu[1], est_n, est_c)
                 resultados_lista_nu = np.array(resultado_tensorial_nu.iloc[0].values.tolist())
                 resultadoEMD_nu= self.__emd.calcularEMD(resultados_lista_nu, self.__matriz.get_matriz_subsistema())
-                ic(resultadoEMD_nu)
 
+                resultado = resultadoEMD - resultadoEMD_nu
+                ic(resultado, 'resultado resta')
+
+    def add_elements_to_list(self, lista, element):
+        if isinstance(element, list):
+            lista.extend(element)
+        else:
+            lista.append(element)
+        return lista

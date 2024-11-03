@@ -1,7 +1,8 @@
 from modelos.AlgoritmoPrincipal import AlgoritmoPrincipal
 
-algoritmo = AlgoritmoPrincipal()
-algoritmo.estrategia1()
+algoritmo = AlgoritmoPrincipal('archivos/matrizGuia.csv')
+algoritmo2 = AlgoritmoPrincipal('archivos\matriz_6_variables.csv')
+algoritmo2.estrategia1()
 
 # matriz = MatrizTPM('archivos/matrizGuia.csv')
 # sistema = Sistema('archivos/estructura.csv')
