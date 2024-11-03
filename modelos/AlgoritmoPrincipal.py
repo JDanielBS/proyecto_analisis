@@ -1,13 +1,13 @@
 from modelos.matriz import MatrizTPM
 from icecream import ic
-from modelos.Emd import Emd
+from modelos.MetricasDistancia import MetricasDistancia
 import numpy as np
 
 
 class AlgoritmoPrincipal:
     def __init__(self, ruta):
         self.__matriz = MatrizTPM(ruta)
-        self.__emd = Emd()
+        self.__emd = MetricasDistancia()
 
     def estrategia1(self):
         self.__matriz.condiciones_de_background()
@@ -51,7 +51,7 @@ class AlgoritmoPrincipal:
                 self.__matriz.limpiar_estados_inicialies()
                 resultado_tensorial = self.__matriz.producto_tensorial_matrices(matriz_normal[0], matriz_complemento[0], matriz_normal[1], matriz_complemento[1], est_n, est_c)
                 resultados_lista = np.array(resultado_tensorial.iloc[0].values.tolist())
-                resultadoEMD= self.__emd.calcularEMD(resultados_lista, self.__matriz.get_matriz_subsistema())
+                resultadoEMD= self.__emd.emd_pyphi(resultados_lista, self.__matriz.get_matriz_subsistema())
 
                 print("SE HACE EL U")
                 matriz_nu, matriz_complemento_nu = self.__matriz.marginalizar_normal_complemento(u)
@@ -59,7 +59,7 @@ class AlgoritmoPrincipal:
                 self.__matriz.limpiar_estados_inicialies()
                 resultado_tensorial_nu = self.__matriz.producto_tensorial_matrices(matriz_nu[0], matriz_complemento_nu[0], matriz_nu[1], matriz_complemento_nu[1], est_n, est_c)
                 resultados_lista_nu = np.array(resultado_tensorial_nu.iloc[0].values.tolist())
-                resultadoEMD_nu= self.__emd.calcularEMD(resultados_lista_nu, self.__matriz.get_matriz_subsistema())
+                resultadoEMD_nu= self.__emd.emd_pyphi(resultados_lista_nu, self.__matriz.get_matriz_subsistema())
 
                 resultado = resultadoEMD - resultadoEMD_nu
                 ic(resultado)
