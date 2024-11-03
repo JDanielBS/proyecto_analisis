@@ -8,19 +8,19 @@ from numpy.typing import NDArray
 from functools import reduce
 
 def main():
-    # algoritmo = AlgoritmoPrincipal('archivos/matrizGuia.csv')
+    algoritmo = AlgoritmoPrincipal('archivos/matrizGuia.csv')
     # algoritmo2 = AlgoritmoPrincipal('archivos\matriz_6_variables.csv')
-    # algoritmo.estrategia1()
-    excel = LectorExcel()
-    matrices = [
-        MatrizTPM(array=mat) for mat in excel.leer()
-    ]
-    tensor = excel.leer() # listado de np NDarray
-    for matrices in zip(*tensor):
-        histogramas = [((i,), m) for i, m in enumerate(matrices)]
-        # histogramas = [print(m) for i, m in enumerate(matrices)]
-        fila_completa = reduce(lambda x, y: bin_prod(x, y), histogramas)
-        print(fila_completa)
+    algoritmo.estrategia1()
+    # excel = LectorExcel()
+    # matrices = [
+    #     MatrizTPM(array=mat) for mat in excel.leer()
+    # ]
+    # tensor = excel.leer() # listado de np NDarray
+    # for matrices in zip(*tensor):
+    #     histogramas = [((i,), m) for i, m in enumerate(matrices)]
+    #     # histogramas = [print(m) for i, m in enumerate(matrices)]
+    #     fila_completa = reduce(lambda x, y: bin_prod(x, y), histogramas)
+    #     print(fila_completa)
 
 # def product(
 #     arrays: list[tuple[tuple[int, ...], NDArray[np.float64]]], le: bool = True
