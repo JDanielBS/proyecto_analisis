@@ -1,3 +1,4 @@
+import time
 from modelos.matriz import MatrizTPM
 from icecream import ic
 from modelos.MetricasDistancia import MetricasDistancia
@@ -15,9 +16,13 @@ class AlgoritmoPrincipal:
         self.__matriz.obtener_estado_nodo()
         self.__matriz.matriz_subsistema()
         self.__matriz.get_matriz_subsistema()
+        t_inicio = time.time()
         self.encontrar_particion_menor()
         ic(self.__particiones_candidatas)
         ic(self.comparar_particiones())
+        t_fin = time.time()
+        t_proceso = t_fin - t_inicio
+        ic(t_proceso)
 
     def encontrar_particion_menor(self):
         conjuntoV = self.__matriz.pasar_cadena_a_lista()

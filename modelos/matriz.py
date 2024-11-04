@@ -219,7 +219,7 @@ class MatrizTPM:
                 indices_n[i] = self.__listado_valores_futuros[indices_n[i]]
                 i += 1
             else:
-                indices_c[i] = self.__listado_valores_futuros[indices_c[i]]
+                indices_c[j] = self.__listado_valores_futuros[indices_c[j]]
                 j += 1
         while i < len(indices_n):
             indices_n[i] = self.__listado_valores_futuros[indices_n[i]]
