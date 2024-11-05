@@ -3,7 +3,7 @@ from modelos.matriz import MatrizTPM
 import numpy as np
 
 class LectorExcel:
-    def __init__(self, ruta = 'archivos\prueba.xlsx'):
+    def __init__(self, ruta = 'archivos\estado_nodo_15.xlsx'):
         self.__ruta = ruta
         self.__matrices = []
 

@@ -3,6 +3,7 @@ from modelos.matriz import MatrizTPM
 from icecream import ic
 from modelos.MetricasDistancia import MetricasDistancia
 import numpy as np
+from itertools import chain
 
 
 class AlgoritmoPrincipal:
@@ -18,7 +19,6 @@ class AlgoritmoPrincipal:
         self.__matriz.get_matriz_subsistema()
         t_inicio = time.time()
         self.encontrar_particion_menor()
-        ic(self.__particiones_candidatas)
         ic(self.comparar_particiones())
         t_fin = time.time()
         t_proceso = t_fin - t_inicio
@@ -32,36 +32,28 @@ class AlgoritmoPrincipal:
     def algoritmo_principal(self, V):
         if(len(V) == 1):
             return
-        v1 = V[0]
-        W = [v1]
+        W = [V[0]]
         for i in range(len(V) - 1):
             mejor_iteracion = ()
             for j in list(set(V) - set(W)):
-                subsistema = []
+                subsistema = list(chain.from_iterable((i,) if isinstance(i[0], int) else i for i in W))
                 u = []
-                subsistema.extend(v1 if isinstance(v1[0], tuple) else [v1])
                 subsistema.extend(j if isinstance(j[0], tuple) else [j])
                 u.extend(j if isinstance(j[0], tuple) else [j])
 
-                print("SE HACE LA V1 U U")
-                ic(subsistema)
                 resultadoEMD = self.realizar_emd(subsistema)
+                resultadoEMD_nu = self.realizar_emd(u)
 
-                print("SE HACE EL U")
-                ic(u)
-                resultadoEMD_nu= self.realizar_emd(u)
-
-                resultado = resultadoEMD - resultadoEMD_nu
-                ic(resultado)
+                resultado = resultadoEMD[0] - resultadoEMD_nu[0]
 
                 if mejor_iteracion == () or resultado < mejor_iteracion[0]:
                     mejor_iteracion = (resultado, j)
-            
+
             W.append(mejor_iteracion[1])
         
         # Tomar los dos últimos elementos de W como el par candidato
         if len(W) >= 2:
-            self.__particiones_candidatas.append((W[-1], W[:-1]))
+            self.__particiones_candidatas.append([resultadoEMD_nu[0], resultadoEMD_nu[1], (W[-1], W[:-1])])
             par_candidato = (W[-2], W[-1])
             # Quitar al arreglo v todos los elementos del par candidato
             V = list(set(V) - set(par_candidato))
@@ -75,8 +67,8 @@ class AlgoritmoPrincipal:
         est_n, est_c = self.__matriz.get_estado_inicial_n_c()
         self.__matriz.limpiar_estados_inicialies()
         resultado_tensorial = self.__matriz.producto_tensorial_matrices(matriz_normal[0], matriz_complemento[0], matriz_normal[1], matriz_complemento[1], est_n, est_c)
-        resultados_lista = np.array(resultado_tensorial.iloc[0].values.tolist())
-        return self.__emd.emd_pyphi(resultados_lista, self.__matriz.get_matriz_subsistema())
+        resultados_lista = np.array(resultado_tensorial.iloc[0].values.tolist(), dtype='float64')
+        return (self.__emd.emd_pyphi(resultados_lista, self.__matriz.get_matriz_subsistema()), resultados_lista)
 
     def combinar_tuplas(self, t1, t2):
         # Verificar si t1 y t2 son tuplas de tuplas (tupla con otros elementos tipo tuple)
@@ -93,18 +85,18 @@ class AlgoritmoPrincipal:
         return t1 + t2
 
     def comparar_particiones(self):
-        particion_nueva = []
-        particion = self.__particiones_candidatas[0]
-        particion_nueva.extend(particion[0] if isinstance(particion[0][0], tuple) else [particion[0]])
-        emd_inicial = self.realizar_emd(particion_nueva)
-        particion_optima = (emd_inicial, particion)
-        for i in range(1, len(self.__particiones_candidatas)):
-            particion_nueva = []
-            p = self.__particiones_candidatas[i]
-            particion_nueva.extend(p[0] if isinstance(p[0][0], tuple) else [p[0]])
-            emd_resultado = self.realizar_emd(particion_nueva)
-            if emd_resultado < particion_optima[0]:
-                particion_optima = (emd_resultado, p)
+        particion_optima = []
+        menor = self.__particiones_candidatas[0][0]
 
+        # Buscar el menor EMD
+        for i in self.__particiones_candidatas:
+            if i[0] < menor:
+                menor = i[0]
+
+        # Agregar las particiones con el menor EMD a la lista de particiones óptimas
+        for i in self.__particiones_candidatas:
+            if i[0] == menor:
+                particion_optima.append(i)
+        
         return particion_optima
             

@@ -17,7 +17,7 @@ class MatrizTPM:
         self.__listado_candidatos = []
         self.__listado_valores_futuros = []
         self.__listado_valores_presentes = []
-        self.__sistema = Sistema('archivos/estructura_luz.csv')
+        self.__sistema = Sistema('condiciones\estructura_15.csv')
         self.__estado_inicial_subsistema= None
         self.__estado_i_normal = ''
         self.__estado_i_complemento = ''
@@ -57,6 +57,7 @@ class MatrizTPM:
         """
         Indexa las filas y columnas de la matriz con etiquetas en formato little-endian
         """
+        self.__matriz = self.__matriz.astype('float32')
         filas = self.__matriz.shape[0]
         columnas = self.__matriz.shape[1]
 
@@ -180,7 +181,7 @@ class MatrizTPM:
             temporal = self.producto_tensorial_matrices(temporal, matriz_marginalizada, indices_temporal, [i], self.__estado_inicial_subsistema, self.__estado_inicial_subsistema)
             indices_temporal.append(i)
             
-        self.__matriz_subsistema = np.array(temporal.iloc[0].values.tolist())
+        self.__matriz_subsistema = np.array(temporal.iloc[0].values.tolist(), dtype='float64')
 
     # def obtener_vector_subsitema_teorico(self):
     #     '''
