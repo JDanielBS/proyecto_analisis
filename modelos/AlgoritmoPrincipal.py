@@ -97,6 +97,17 @@ class AlgoritmoPrincipal:
         for i in self.__particiones_candidatas:
             if i[0] == menor:
                 particion_optima.append(i)
+
+    
+        ruta = "archivos/particion_optima.txt"
+        self.guardar_en_archivo(particion_optima[0][1], ruta)  
         
         return particion_optima
+    
+    def guardar_en_archivo(self, contenido, ruta):
+        with open(ruta, "w") as archivo:
+            archivo.write(str(contenido))  # Escribir el contenido como texto
             
+    
+   
+ 
