@@ -5,7 +5,7 @@ from modelos.MetricasDistancia import MetricasDistancia
 import numpy as np
 from itertools import chain
 import random
-
+import json
 
 class AlgoritmoPrincipal:
     def __init__(self, ruta):
@@ -26,6 +26,7 @@ class AlgoritmoPrincipal:
         ic(self.__particiones_candidatas)
         # self.encontrar_particion_menor()
         # ic(self.comparar_particiones())
+        self.guardar_mejor()
         t_fin = time.time()
         t_proceso = t_fin - t_inicio
         ic(t_proceso)
@@ -68,7 +69,6 @@ class AlgoritmoPrincipal:
         self.algoritmo_principal(V)
     
     def realizar_emd(self, lista):
-        ic(lista)
         matriz_normal, matriz_complemento = self.__matriz.marginalizar_normal_complemento(lista)
         est_n, est_c = self.__matriz.get_estado_inicial_n_c()
         self.__matriz.limpiar_estados_inicialies()
@@ -134,23 +134,15 @@ class AlgoritmoPrincipal:
             particion1 = nodos[:punto_division]
             particion2 = nodos[punto_division:]
 
-        ic(particion1)
-        ic(particion2)
-
         return particion1
     
     def estrategia_kmeans_logica(self, particion_inicial, nodo_pasado):
-        ic(particion_inicial)
         resultado = self.realizar_emd(particion_inicial)
         mejor_emd = resultado[0]
         distribucion = resultado[1]
-        ic(distribucion)
-        ic(mejor_emd)
         particion_complemento = self.__matriz.encontrar_complemento_particion(particion_inicial)
-        ic(particion_complemento)
         
         mejor_particion = (particion_inicial, particion_complemento)
-        print(mejor_particion, 'al iniciar')
 
         if not nodo_pasado:
             p_sin_nodo_pasado = list(filter(lambda x: x != nodo_pasado, particion_inicial))
@@ -165,14 +157,11 @@ class AlgoritmoPrincipal:
                 resultado = self.realizar_emd(nueva_particion1)
                 nuevo_emd = resultado[0]
                 nueva_distribucion = resultado[1]
-                ic(nueva_distribucion)
-                ic(nuevo_emd)
                 if nuevo_emd < mejor_emd:
                     mejor_emd = nuevo_emd
                     mejor_particion = (nueva_particion1, nueva_particion2)
                     distribucion = nueva_distribucion
                     nodo_pasado = nodo
-            print(mejor_particion, 'al finalizar primer for')
             
         if not nodo_pasado:
             p_sin_nodo_pasado = list(filter(lambda x: x != nodo_pasado, particion_complemento))
@@ -187,8 +176,6 @@ class AlgoritmoPrincipal:
                 resultado = self.realizar_emd(nueva_particion1)
                 nuevo_emd = resultado[0]
                 nueva_distribucion = resultado[1]
-                ic(nueva_distribucion)              
-                ic(nuevo_emd)
                     
                 if nuevo_emd < mejor_emd:
                     mejor_emd = nuevo_emd
@@ -197,7 +184,6 @@ class AlgoritmoPrincipal:
                     nodo_pasado = nodo
                 else:
                     nodo_pasado = None
-        print(mejor_particion, 'al finalizar segundo for')
             
         diccionario_particiones = {
             'emd': mejor_emd,
@@ -206,11 +192,30 @@ class AlgoritmoPrincipal:
             'distribucion_teorica': self.__matriz.get_matriz_subsistema(),
             'distribucion_experimental': distribucion
         }   
-        ic(diccionario_particiones) 
         self.__particiones_candidatas.append(diccionario_particiones)
 
         # Verificar si el mejor EMD es cero
         if mejor_emd != 0 and mejor_particion != (particion_inicial, particion_complemento):
+            
             self.estrategia_kmeans_logica(mejor_particion[0], nodo_pasado)
 
         return self.__particiones_candidatas
+    
+
+    
+
+    def guardar_mejor(self):
+        mejor_particion = self.__particiones_candidatas.pop()
+
+        # Convertimos las distribuciones a listas y creamos el diccionario
+        diccionario_particiones = {
+            'emd': mejor_particion['emd'],  # Es un float, compatible con JSON
+            'particion1': mejor_particion['particion1'],  # Es una lista de tuplas, compatible con JSON
+            'particion2': mejor_particion['particion2'],  # Es una lista de tuplas, compatible con JSON
+            'distribucion_teorica': mejor_particion['distribucion_teorica'].tolist(),  # Convertimos numpy.array a lista
+            'distribucion_experimental': mejor_particion['distribucion_experimental'].tolist()  # Convertimos numpy.array a lista
+        }
+
+        # Guardamos en un archivo JSON
+        with open('archivos/particion_optima.json', 'w') as f:
+            json.dump(diccionario_particiones, f, indent=4)  # Formato legible

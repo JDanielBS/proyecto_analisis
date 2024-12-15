@@ -17,7 +17,7 @@ class MatrizTPM:
         self.__listado_candidatos = []
         self.__listado_valores_futuros = []
         self.__listado_valores_presentes = []
-        self.__sistema = Sistema('condiciones/estructura_5.csv')
+        self.__sistema = Sistema('condiciones/estructura_10.csv')
         self.__estado_inicial_subsistema= None
         self.__estado_i_normal = ''
         self.__estado_i_complemento = ''
@@ -407,7 +407,6 @@ class MatrizTPM:
     ------------------------------------------------------------------------------------------------
     """
     def pasar_lista_a_cadena(self, lista, bit):
-        ic(lista)
         """
         Convierte una lista de enteros en una cadena de bits.
         """
@@ -433,7 +432,6 @@ class MatrizTPM:
             cadena_dinamica = "".join([cadena_dinamica[i] for i in range(len(self.__listado_valores_futuros))])
         
         # Convierte la lista de caracteres de vuelta a una cadena
-        ic(cadena_dinamica)
         return cadena_dinamica
     
     def pasar_cadena_a_lista(self):
@@ -460,7 +458,6 @@ class MatrizTPM:
     Implementación de kmeans
     '''
     def encontrar_complemento_particion(self, lista):
-        ic(lista)
         """
         Encuentra el complemento de una partición.
         """
