@@ -4,6 +4,7 @@ from icecream import ic
 from modelos.MetricasDistancia import MetricasDistancia
 import numpy as np
 from itertools import chain
+import random
 
 
 class AlgoritmoPrincipal:
@@ -20,6 +21,7 @@ class AlgoritmoPrincipal:
         t_inicio = time.time()
         particion_inicial = self.generar_particion_inicial()
         prueba = [(1,3)]
+        self.__particiones_candidatas.clear()
         self.estrategia_kmeans_logica(particion_inicial, None)
         ic(self.__particiones_candidatas)
         # self.encontrar_particion_menor()
@@ -120,12 +122,20 @@ class AlgoritmoPrincipal:
         particion1 = []
         particion2 = []
 
-        # Asignar nodos a los subconjuntos de manera alternada
-        for i, nodo in enumerate(nodos):
-            if i % 2 == 0:
-                particion1.append(nodo)
-            else:
-                particion2.append(nodo)
+        while not particion1 or not particion2:
+            # Mezclar los nodos de manera aleatoria
+            random.shuffle(nodos)
+
+            # Generar un porcentaje de división aleatorio entre 20%-80% y 35%-65%
+            porcentaje_division = random.uniform(0.2, 0.8)
+            punto_division = int(len(nodos) * porcentaje_division)
+
+            # Asignar nodos a los subconjuntos de manera desbalanceada
+            particion1 = nodos[:punto_division]
+            particion2 = nodos[punto_division:]
+
+        ic(particion1)
+        ic(particion2)
 
         return particion1
     
@@ -137,6 +147,8 @@ class AlgoritmoPrincipal:
         ic(distribucion)
         ic(mejor_emd)
         particion_complemento = self.__matriz.encontrar_complemento_particion(particion_inicial)
+        ic(particion_complemento)
+        
         mejor_particion = (particion_inicial, particion_complemento)
         print(mejor_particion, 'al iniciar')
 

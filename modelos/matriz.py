@@ -407,6 +407,7 @@ class MatrizTPM:
     ------------------------------------------------------------------------------------------------
     """
     def pasar_lista_a_cadena(self, lista, bit):
+        ic(lista)
         """
         Convierte una lista de enteros en una cadena de bits.
         """
@@ -432,6 +433,7 @@ class MatrizTPM:
             cadena_dinamica = "".join([cadena_dinamica[i] for i in range(len(self.__listado_valores_futuros))])
         
         # Convierte la lista de caracteres de vuelta a una cadena
+        ic(cadena_dinamica)
         return cadena_dinamica
     
     def pasar_cadena_a_lista(self):
@@ -458,6 +460,7 @@ class MatrizTPM:
     Implementación de kmeans
     '''
     def encontrar_complemento_particion(self, lista):
+        ic(lista)
         """
         Encuentra el complemento de una partición.
         """
@@ -465,11 +468,13 @@ class MatrizTPM:
         # EL SISTEMA CANDIDATO PARA SABER QUE LE FALTA EN EL COMPLEMENTO
         complemento = []
         for i in range(len(self.__listado_valores_presentes)):
-            if (0, i) not in lista:
-                complemento.append((0, i))
+            valor_presente = self.__listado_valores_presentes[i]
+            if (0, valor_presente) not in lista:
+                complemento.append((0, valor_presente))
         for i in range(len(self.__listado_valores_futuros)):
-            if (1, i) not in lista:
-                complemento.append((1, i))
+            valor_futuro = self.__listado_valores_futuros[i]
+            if (1, valor_futuro) not in lista:
+                complemento.append((1, valor_futuro))
         return complemento
 
     def prueba_lista(self):
