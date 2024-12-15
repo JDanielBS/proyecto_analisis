@@ -8,7 +8,7 @@ from numpy.typing import NDArray
 from functools import reduce
 
 def main():
-    algoritmo = AlgoritmoPrincipal('archivos/matrizGuia.csv')
+    # algoritmo = AlgoritmoPrincipal('archivos/matrizGuia.csv')
     # algoritmo2 = AlgoritmoPrincipal('archivos\matriz_6_variables.csv')
     # algoritmo.estrategia1()
     excel = LectorExcel()
@@ -25,7 +25,7 @@ def main():
     # Convertimos la lista `resultados` a un arreglo numpy con la forma final
     resultado_matriz = np.array(resultados)
     # exportar a csv
-    pd.DataFrame(resultado_matriz).to_csv('resultado_15.csv', index=False, header=False)
+    pd.DataFrame(resultado_matriz).to_csv('resultado_6.csv', index=False, header=False)
 
 
 # def product(
