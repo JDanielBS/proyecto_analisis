@@ -18,15 +18,19 @@ class AlgoritmoPrincipal:
         self.__matriz.matriz_subsistema()
         self.__matriz.get_matriz_subsistema()
         t_inicio = time.time()
-        self.encontrar_particion_menor()
-        ic(self.comparar_particiones())
+        particion_inicial = self.generar_particion_inicial()
+        prueba= [(1,3)]
+        self.estrategia_kmeans_logica(particion_inicial)
+        ic(self.__particiones_candidatas)
+        # self.encontrar_particion_menor()
+        # ic(self.comparar_particiones())
         t_fin = time.time()
         t_proceso = t_fin - t_inicio
         ic(t_proceso)
 
     def encontrar_particion_menor(self):
         conjuntoV = self.__matriz.pasar_cadena_a_lista()
-        ic(conjuntoV)
+        # ic(conjuntoV)
         self.algoritmo_principal(conjuntoV)
 
     def algoritmo_principal(self, V):
@@ -40,7 +44,6 @@ class AlgoritmoPrincipal:
                 u = []
                 subsistema.extend(j if isinstance(j[0], tuple) else [j])
                 u.extend(j if isinstance(j[0], tuple) else [j])
-
                 resultadoEMD = self.realizar_emd(subsistema)
                 resultadoEMD_nu = self.realizar_emd(u)
 
@@ -53,7 +56,7 @@ class AlgoritmoPrincipal:
         
         # Tomar los dos últimos elementos de W como el par candidato
         if len(W) >= 2:
-            self.__particiones_candidatas.append([resultadoEMD_nu[0], resultadoEMD_nu[1], (W[-1], W[:-1])])
+            self.__particiones_candidatas.append([resultadoEMD[0], resultadoEMD[1], (W[-1], W[:-1])])
             par_candidato = (W[-2], W[-1])
             # Quitar al arreglo v todos los elementos del par candidato
             V = list(set(V) - set(par_candidato))
@@ -63,6 +66,7 @@ class AlgoritmoPrincipal:
         self.algoritmo_principal(V)
     
     def realizar_emd(self, lista):
+        ic(lista)
         matriz_normal, matriz_complemento = self.__matriz.marginalizar_normal_complemento(lista)
         est_n, est_c = self.__matriz.get_estado_inicial_n_c()
         self.__matriz.limpiar_estados_inicialies()
@@ -98,9 +102,11 @@ class AlgoritmoPrincipal:
             if i[0] == menor:
                 particion_optima.append(i)
 
-    
-        ruta = "archivos/particion_optima.txt"
-        self.guardar_en_archivo(particion_optima[0][1], ruta)  
+        with open('archivos/particion_optima.txt', 'w') as f:
+            for i in particion_optima:
+                arreglo = i[1]
+                np.savetxt(f, arreglo, delimiter=',', fmt='%.5f')
+                f.write('\n')  # Agregar una línea en blanco entre arreglos 
         
         return particion_optima
     
@@ -108,6 +114,74 @@ class AlgoritmoPrincipal:
         with open(ruta, "w") as archivo:
             archivo.write(str(contenido))  # Escribir el contenido como texto
             
+    def generar_particion_inicial(self):
+        nodos = self.__matriz.pasar_cadena_a_lista()
+        
+        particion1 = []
+        particion2 = []
+
+        # Asignar nodos a los subconjuntos de manera alternada
+        for i, nodo in enumerate(nodos):
+            if i % 2 == 0:
+                particion1.append(nodo)
+            else:
+                particion2.append(nodo)
+
+        return particion1
+    def estrategia_kmeans_logica(self, particion_inicial):
+            ic(particion_inicial)
+            resultado = self.realizar_emd(particion_inicial)
+            mejor_emd = resultado[0]
+            distribucion = resultado[1]
+            ic(distribucion)
+            ic(mejor_emd)
+            particion_complemento = self.__matriz.encontrar_complemento_particion(particion_inicial)
+            mejor_particion = (particion_inicial, particion_complemento)
+            print(mejor_particion, 'al iniciar')
+            # # Probar moviendo nodos de particion1 a particion2
+            for nodo in particion_inicial:
+                nueva_particion1 = [n for n in particion_inicial if n != nodo]
+                nueva_particion2 = particion_complemento + [nodo]
+                resultado = self.realizar_emd(nueva_particion1)
+                nuevo_emd = resultado[0]
+                nueva_distribucion = resultado[1]
+                ic(nueva_distribucion)
+                ic(nuevo_emd)
+                if nuevo_emd < mejor_emd:
+                    mejor_emd = nuevo_emd
+                    mejor_particion = (nueva_particion1, nueva_particion2)
+                    distribucion = nueva_distribucion
+            print(mejor_particion, 'al finalizar primer for')
+
+            # # Probar moviendo nodos de particion2 a particion1
+            for nodo in particion_complemento:
+                nueva_particion2 = [n for n in particion_complemento if n != nodo]
+                nueva_particion1 = particion_inicial + [nodo]
+                resultado = self.realizar_emd(nueva_particion1)
+                nuevo_emd = resultado[0]
+                nueva_distribucion = resultado[1]
+                ic(nueva_distribucion)              
+                ic(nuevo_emd)
+                
+                if nuevo_emd < mejor_emd:
+                    mejor_emd = nuevo_emd
+                    mejor_particion = (nueva_particion1, nueva_particion2)
+                    distribucion = nueva_distribucion   
+            print(mejor_particion, 'al finalizar segundo for')
+            
+            diccionario_particiones = {
+                'emd': mejor_emd,
+                'particion1': mejor_particion[0],
+                'particion2': mejor_particion[1],
+                'distribucion_teorica': self.__matriz.get_matriz_subsistema(),
+                'distribucion_experimental': distribucion
+            }   
+            ic(diccionario_particiones) 
+            self.__particiones_candidatas.append(diccionario_particiones)
+            
+            # Llamada recursiva si se encontró una mejor partición
+            if mejor_particion != (particion_inicial, particion_complemento):
+                return self.estrategia_kmeans_logica(mejor_particion[0])
+            
+            return self.__particiones_candidatas
     
-   
- 

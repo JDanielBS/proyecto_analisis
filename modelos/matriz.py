@@ -46,6 +46,10 @@ class MatrizTPM:
     
     def get_estado_inicial_n_c(self):
         return self.__estado_i_normal, self.__estado_i_complemento
+    
+    def get_datos_para_kmeans(self):
+        datos=  self.__matriz_subsistema
+        return datos
 
     """
     ------------------------------------------------------------------------------------------------
@@ -57,7 +61,6 @@ class MatrizTPM:
         """
         Indexa las filas y columnas de la matriz con etiquetas en formato little-endian
         """
-        self.__matriz = self.__matriz.astype('float32')
         filas = self.__matriz.shape[0]
         columnas = self.__matriz.shape[1]
 
@@ -431,9 +434,6 @@ class MatrizTPM:
         # Convierte la lista de caracteres de vuelta a una cadena
         return cadena_dinamica
     
-    def producto_tensorial_chevre(self, histograma1, histograma2):
-        ...
-
     def pasar_cadena_a_lista(self):
         """
         Convierte una cadena de bits a una lista.
@@ -453,6 +453,24 @@ class MatrizTPM:
         self.__estado_i_normal = ''
         self.__estado_i_complemento = ''
         self.__estado_inicial_subsistema = ''
+        
+    '''
+    Implementación de kmeans
+    '''
+    def encontrar_complemento_particion(self, lista):
+        """
+        Encuentra el complemento de una partición.
+        """
+        # ENTRAN TUPLAS DONDE EL PRIMER ELEMENTO SI ES CERO ES PRESENTE, SI ES UNO ES FUTURO, SE MIRA 
+        # EL SISTEMA CANDIDATO PARA SABER QUE LE FALTA EN EL COMPLEMENTO
+        complemento = []
+        for i in range(len(self.__listado_valores_presentes)):
+            if (0, i) not in lista:
+                complemento.append((0, i))
+        for i in range(len(self.__listado_valores_futuros)):
+            if (1, i) not in lista:
+                complemento.append((1, i))
+        return complemento
 
     def prueba_lista(self):
         # Verificar que no ingrese variables que no estén en el sistema candidato
@@ -495,11 +513,7 @@ class MatrizTPM:
     def prueba_marginalizar(self):
         #mandamos del diccionario self.__matriz_estado_nodo_dict el indice 0 y 2
         # lista = [(0, 0), (1, 1), (0, 1), (1, 3)]
-        ic(self.get_dic_marginalizadas())
         lista = [(0, 0), (1, 0)]
         
         # A|a normal
         normal, complemento = self.marginalizar_normal_complemento(lista)
-        ic(normal)
-        ic(complemento)
-    
