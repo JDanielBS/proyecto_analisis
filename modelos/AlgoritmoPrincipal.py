@@ -19,8 +19,8 @@ class AlgoritmoPrincipal:
         self.__matriz.get_matriz_subsistema()
         t_inicio = time.time()
         particion_inicial = self.generar_particion_inicial()
-        prueba= [(1,3)]
-        self.estrategia_kmeans_logica(particion_inicial)
+        prueba = [(1,3)]
+        self.estrategia_kmeans_logica(particion_inicial, None)
         ic(self.__particiones_candidatas)
         # self.encontrar_particion_menor()
         # ic(self.comparar_particiones())
@@ -128,18 +128,26 @@ class AlgoritmoPrincipal:
                 particion2.append(nodo)
 
         return particion1
-    def estrategia_kmeans_logica(self, particion_inicial):
-            ic(particion_inicial)
-            resultado = self.realizar_emd(particion_inicial)
-            mejor_emd = resultado[0]
-            distribucion = resultado[1]
-            ic(distribucion)
-            ic(mejor_emd)
-            particion_complemento = self.__matriz.encontrar_complemento_particion(particion_inicial)
-            mejor_particion = (particion_inicial, particion_complemento)
-            print(mejor_particion, 'al iniciar')
-            # # Probar moviendo nodos de particion1 a particion2
-            for nodo in particion_inicial:
+    
+    def estrategia_kmeans_logica(self, particion_inicial, nodo_pasado):
+        ic(particion_inicial)
+        resultado = self.realizar_emd(particion_inicial)
+        mejor_emd = resultado[0]
+        distribucion = resultado[1]
+        ic(distribucion)
+        ic(mejor_emd)
+        particion_complemento = self.__matriz.encontrar_complemento_particion(particion_inicial)
+        mejor_particion = (particion_inicial, particion_complemento)
+        print(mejor_particion, 'al iniciar')
+
+        if not nodo_pasado:
+            p_sin_nodo_pasado = list(filter(lambda x: x != nodo_pasado, particion_inicial))
+        else:
+            p_sin_nodo_pasado = particion_inicial
+
+        # # Probar moviendo nodos de particion1 a particion2
+        if len(p_sin_nodo_pasado) != 1:
+            for nodo in p_sin_nodo_pasado:
                 nueva_particion1 = [n for n in particion_inicial if n != nodo]
                 nueva_particion2 = particion_complemento + [nodo]
                 resultado = self.realizar_emd(nueva_particion1)
@@ -151,10 +159,17 @@ class AlgoritmoPrincipal:
                     mejor_emd = nuevo_emd
                     mejor_particion = (nueva_particion1, nueva_particion2)
                     distribucion = nueva_distribucion
+                    nodo_pasado = nodo
             print(mejor_particion, 'al finalizar primer for')
-
-            # # Probar moviendo nodos de particion2 a particion1
-            for nodo in particion_complemento:
+            
+        if not nodo_pasado:
+            p_sin_nodo_pasado = list(filter(lambda x: x != nodo_pasado, particion_complemento))
+        else:
+            p_sin_nodo_pasado = particion_complemento
+            
+        # # Probar moviendo nodos de particion2 a particion1
+        if len(p_sin_nodo_pasado) != 1:
+            for nodo in p_sin_nodo_pasado:
                 nueva_particion2 = [n for n in particion_complemento if n != nodo]
                 nueva_particion1 = particion_inicial + [nodo]
                 resultado = self.realizar_emd(nueva_particion1)
@@ -162,26 +177,28 @@ class AlgoritmoPrincipal:
                 nueva_distribucion = resultado[1]
                 ic(nueva_distribucion)              
                 ic(nuevo_emd)
-                
+                    
                 if nuevo_emd < mejor_emd:
                     mejor_emd = nuevo_emd
                     mejor_particion = (nueva_particion1, nueva_particion2)
-                    distribucion = nueva_distribucion   
-            print(mejor_particion, 'al finalizar segundo for')
+                    distribucion = nueva_distribucion
+                    nodo_pasado = nodo
+                else:
+                    nodo_pasado = None
+        print(mejor_particion, 'al finalizar segundo for')
             
-            diccionario_particiones = {
-                'emd': mejor_emd,
-                'particion1': mejor_particion[0],
-                'particion2': mejor_particion[1],
-                'distribucion_teorica': self.__matriz.get_matriz_subsistema(),
-                'distribucion_experimental': distribucion
-            }   
-            ic(diccionario_particiones) 
-            self.__particiones_candidatas.append(diccionario_particiones)
-            
-            # Llamada recursiva si se encontró una mejor partición
-            if mejor_particion != (particion_inicial, particion_complemento):
-                return self.estrategia_kmeans_logica(mejor_particion[0])
-            
-            return self.__particiones_candidatas
-    
+        diccionario_particiones = {
+            'emd': mejor_emd,
+            'particion1': mejor_particion[0],
+            'particion2': mejor_particion[1],
+            'distribucion_teorica': self.__matriz.get_matriz_subsistema(),
+            'distribucion_experimental': distribucion
+        }   
+        ic(diccionario_particiones) 
+        self.__particiones_candidatas.append(diccionario_particiones)
+
+        # Verificar si el mejor EMD es cero
+        if mejor_emd != 0 and mejor_particion != (particion_inicial, particion_complemento):
+            self.estrategia_kmeans_logica(mejor_particion[0], nodo_pasado)
+
+        return self.__particiones_candidatas
