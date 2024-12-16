@@ -3,7 +3,7 @@ from modelos.matriz import MatrizTPM
 from icecream import ic
 from modelos.MetricasDistancia import MetricasDistancia
 import numpy as np
-from itertools import chain
+from itertools import chain, combinations
 import random
 import json
 
@@ -200,9 +200,6 @@ class AlgoritmoPrincipal:
             self.estrategia_kmeans_logica(mejor_particion[0], nodo_pasado)
 
         return self.__particiones_candidatas
-    
-
-    
 
     def guardar_mejor(self):
         mejor_particion = self.__particiones_candidatas.pop()
