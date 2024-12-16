@@ -150,7 +150,7 @@ class AlgoritmoPrincipal:
             p_sin_nodo_pasado = particion_inicial
 
         # # Probar moviendo nodos de particion1 a particion2
-        if len(p_sin_nodo_pasado) != 1:
+        if len(p_sin_nodo_pasado) != 1 and mejor_emd != 0:
             for nodo in p_sin_nodo_pasado:
                 nueva_particion1 = [n for n in particion_inicial if n != nodo]
                 nueva_particion2 = particion_complemento + [nodo]
@@ -169,7 +169,7 @@ class AlgoritmoPrincipal:
             p_sin_nodo_pasado = particion_complemento
             
         # # Probar moviendo nodos de particion2 a particion1
-        if len(p_sin_nodo_pasado) != 1:
+        if len(p_sin_nodo_pasado) != 1 and mejor_emd != 0:
             for nodo in p_sin_nodo_pasado:
                 nueva_particion2 = [n for n in particion_complemento if n != nodo]
                 nueva_particion1 = particion_inicial + [nodo]
@@ -196,7 +196,6 @@ class AlgoritmoPrincipal:
 
         # Verificar si el mejor EMD es cero
         if mejor_emd != 0 and mejor_particion != (particion_inicial, particion_complemento):
-            
             self.estrategia_kmeans_logica(mejor_particion[0], nodo_pasado)
 
         return self.__particiones_candidatas
